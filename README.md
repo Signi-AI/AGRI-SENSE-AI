@@ -1,74 +1,78 @@
-# ML Component — Mwongozo wa Kuunganisha (Kwa Backend Teammate)
+# KILIMO AI — Web App (Frontend + Backend)
 
-## Faili Ulizopokea
-1. `crop_recommendation_model.pkl` — Model A (inapendekeza zao)
-2. `viwango_vya_mazao.json` — Wigo wa N/P/K/temp/humidity/pH kwa kila zao
-3. `diagnostic_functions.py` — Model B (kutambua na kurekebisha matatizo ya udongo/maji)
+Mfumo wa wavuti wenye vipande viwili, ukiendana na Model A (Crop Recommendation)
+na Model B (Diagnostic & Correction Tool) tulizozijenga kwenye notebook ya ML.
 
-## Maktaba Zinazohitajika
-(Model B / diagnostic_functions.py HAIHITAJI pandas - ni "standalone")
-
----
-
-## MODEL A — Crop Recommendation
-
-```python
-import joblib
-model = joblib.load('crop_recommendation_model.pkl')
-
-# Input LAZIMA iwe kwa mpangilio huu: N, P, K, temperature, humidity, ph, rainfall
-utabiri = model.predict([[90, 42, 43, 20.8, 82.0, 6.5, 202.9]])
-zao_linalopendekezwa = utabiri[0]   # mfano: 'rice'
+```
+kilimo-ai/
+├── index.html              ← FRONTEND (fungua moja kwa moja kwenye browser)
+├── backend/
+│   ├── app.py               ← BACKEND (Flask API)
+│   ├── requirements.txt
+│   ├── crop_recommendation_model.pkl   ← WEKA FAILI LAKO HAPA
+│   ├── viwango_vya_mazao.json          ← WEKA FAILI LAKO HAPA
+│   └── diagnostic_functions.py         ← WEKA FAILI LAKO HAPA
+└── README.md
 ```
 
----
+## Njia 1: Jaribu Frontend Peke Yake (Bila Backend)
 
-## MODEL B — Diagnostic & Correction Tool
+Fungua tu `index.html` kwenye browser (double-click, au "Open with" browser yako).
 
-```python
-from diagnostic_functions import pakua_jedwali_la_viwango, toa_ripoti_kamili
+- **Chunguza Tatizo (Model B)** itafanya kazi KIKAMILIFU mara moja — logic yote ya
+  Python imetafsiriwa moja kwa moja kwenda JavaScript ndani ya `index.html`.
+- **Pendekeza Zao (Model A)** itatumia *makadirio ya haraka ya kivinjari* (kulinganisha
+  na wastani wa kila zao), SIYO Random Forest halisi — hii ni njia ya kujaribu UI
+  bila kuhitaji server.
+- Data ya mazao ni **DEMO (mazao 5 tu)**. Bofya "Pakia data yako" chini ya ukurasa
+  na uchague `viwango_vya_mazao.json` ulioutengeneza kwenye notebook — mazao yote
+  22 yataonekana papo hapo, bila kuhitaji kubadilisha code.
 
-# Fanya hii MARA MOJA tu wakati server inaanza (siyo kwa kila ombi)
-jedwali_la_viwango = pakua_jedwali_la_viwango('viwango_vya_mazao.json')
+## Njia 2: Ungania na Backend Halisi (Usahihi Kamili wa Model A)
 
-# Kwa kila ombi la mtumiaji:
-usomaji_wa_sensor = {
-    'N': 40, 'P': 30, 'K': 20,
-    'temperature': 30, 'humidity': 65, 'ph': 5.0
-}
+1. Nakili faili tatu za ML zilizotengenezwa kwenye notebook:
+   - `crop_recommendation_model.pkl`
+   - `viwango_vya_mazao.json`
+   - `diagnostic_functions.py`
 
-ripoti = toa_ripoti_kamili(
-    zao='maize',                          # zao alilochagua mkulima
-    usomaji_wa_sasa=usomaji_wa_sensor,    # kutoka sensor
-    jedwali_la_viwango=jedwali_la_viwango,
-    aina_ya_udongo='tifutifu',            # 'mchanga' / 'tifutifu' / 'mfinyanzi'
-    ph_ya_maji=None                       # HIARI - namba kama mtumiaji ana kipimo cha maji
-)
-```
+   ndani ya folder ya `backend/`.
 
-## Kutuma Kama JSON Response
-`ripoti` ni dictionary ya kawaida ya Python (siyo pandas), tayari kwa `json.dumps()` moja kwa moja - hakuna tatizo la numpy.
+2. Fungua terminal ndani ya `backend/`:
+   ```bash
+   pip install -r requirements.txt
+   python app.py
+   ```
+   Utaona ujumbe: `✅ Model A imepakuliwa.` na `✅ Jedwali la viwango limepakuliwa.`
+   Server itafanya kazi kwenye `http://localhost:5000`.
 
----
+3. Fungua `index.html`, nenda sehemu ya "Chanzo cha Data" chini ya ukurasa, weka:
+   ```
+   http://localhost:5000
+   ```
+   kwenye kisanduku cha "API URL". Sasa kitufe cha "Pata Pendekezo la Zao"
+   kitatumia Random Forest yenu halisi (kupitia `/api/predict`).
 
-## Muundo wa Majibu (Response) - Kesi Mbili
+## API Endpoints (kwa Backend Teammate)
 
-### Kama hakuna tatizo:
-```json
-{"zao": "maize", "hali_ya_jumla": "Nzuri", "ujumbe": "...", "marekebisho": []}
-```
+| Endpoint | Method | Kazi |
+|---|---|---|
+| `/api/health` | GET | Angalia kama model/jedwali zimepakuliwa |
+| `/api/predict` | POST | Model A — `{N,P,K,temperature,humidity,ph,rainfall}` → `{zao}` |
+| `/api/diagnose` | POST | Model B — `{zao, usomaji_wa_sasa, aina_ya_udongo, ph_ya_maji}` → ripoti kamili |
 
-### Kama kuna matatizo (angalia mfano halisi tuliopata):
-```json
-{
-  "zao": "maize",
-  "hali_ya_jumla": "Kuna matatizo yanayohitaji hatua",
-  "idadi_ya_matatizo": 5,
-  "marekebisho": [
-    {"kigezo": "Nitrogen", "hali": "upungufu", "kiasi": 94.4, "kipimo": "kg kwa hekta", ...},
-    {"kigezo": "pH ya Udongo", "aina_ya_marekebisho": "chokaa", "kiasi": 4.38, ...}
-  ]
-}
-```
+## Kwa Frontend Teammate
 
-## Maswali? Wasiliana na: [EVANCE D KOMBA]
+`index.html` ni faili moja tu (HTML+CSS+JS) — inaweza kuwa msingi wa React
+component au ukaendelea kuiongeza vipengele bila kuhitaji build tools. Muundo
+wa design (rangi, fonti, "soil horizon" motif) upo kwenye `<style>` sehemu ya
+juu ya faili — badilisha CSS variables (`:root { ... }`) kubadilisha mwonekano
+mzima kwa haraka.
+
+## Vidokezo vya Kiuaminifu (Muhimu kwa Ripoti Yenu)
+
+- Data ya crop stats ndani ya `index.html` (kabla ya kupakia faili lako) ni
+  **makadirio ya mfano tu**, siyo data halisi ya mafunzo — daima tumia
+  `viwango_vya_mazao.json` halisi kwa matokeo sahihi.
+- Formula za marekebisho ya pH ya maji zinatumia makadirio ya jumla ya
+  kilimo cha hydroponics (siyo kipimo cha alkalinity cha kimaabara) — kama
+  ilivyokubaliwa kwenye mazungumzo ya awali na ML teammate.
