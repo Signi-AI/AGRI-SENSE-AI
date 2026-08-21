@@ -45,8 +45,11 @@ def hakiki_usomaji(usomaji_wa_sasa, ph_ya_maji=None, ujazo_wa_lita=None):
 
     for kigezo in ['N', 'P', 'K']:
         thamani = usomaji_wa_sasa.get(kigezo)
-        if thamani is not None and thamani < 0:
-            makosa.append(f"{kigezo} ({thamani}) haiwezi kuwa hasi.")
+        if thamani is not None:
+            if thamani < 0:
+                makosa.append(f"{kigezo} ({thamani}) haiwezi kuwa hasi.")
+            elif thamani > 300:
+                makosa.append(f"{kigezo} ({thamani}) ni kubwa mno kuwa na maana kikemikali — wigo unaowezekana ni 0 hadi 300.")
 
     temp = usomaji_wa_sasa.get('temperature')
     if temp is not None and not (-10 <= temp <= 55):

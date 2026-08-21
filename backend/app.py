@@ -67,8 +67,11 @@ def hakiki_data_ya_model_a(data):
     """
     makosa = []
     for k in ['N', 'P', 'K']:
-        if data.get(k, 0) < 0:
+        thamani = data.get(k, 0)
+        if thamani < 0:
             makosa.append(f"{k} haiwezi kuwa hasi.")
+        elif thamani > 300:
+            makosa.append(f"{k} ({thamani}) ni kubwa mno kuwa na maana kikemikali — wigo unaowezekana ni 0 hadi 300.")
     ph = data.get('ph')
     if ph is not None and not (0 <= ph <= 14):
         makosa.append("pH lazima iwe kati ya 0 na 14.")
