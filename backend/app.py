@@ -1,31 +1,44 @@
 """
-KILIMO AI — Backend (Flask)
-============================
-Hii ndiyo backend halisi itakayotumia faili zenu tatu za ML:
+KILIMO AI — Backend (FastAPI)
+==============================
+Toleo la FastAPI la backend hii (badala ya Flask). Inatumia faili tatu
+zile zile za ML:
   - crop_recommendation_model.pkl  (Model A)
   - viwango_vya_mazao.json         (data ya Model B)
   - diagnostic_functions.py        (functions za Model B)
 
 JINSI YA KUENDESHA:
   1. Nakili faili tatu hapo juu ndani ya folder hii hii (backend/)
-  2. pip install -r requirements.txt
-  3. python app.py
-  4. Fungua frontend (index.html) na weka API URL: http://localhost:5000
+  2. python3 -m pip install -r requirements.txt
+  3. uvicorn app:app --reload --port 5000
+     (au: python3 app.py — zote mbili zinafanya kazi, lakini uvicorn
+      inatoa --reload ya kuchunguza mabadiliko ya code moja kwa moja)
+  4. Fungua http://127.0.0.1:5000/docs kuona API docs zinazojitengeneza wenyewe
+  5. Fungua frontend (index.html) na weka API URL: http://127.0.0.1:5000
 """
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import joblib
 import os
+from typing import Optional, Dict
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import joblib
 
 from diagnostic_functions import pakua_jedwali_la_viwango, toa_ripoti_kamili
 
-app = Flask(__name__)
-CORS(app)  # Inaruhusu frontend (kwenye domain/faili tofauti) kuita API hii
+app = FastAPI(title="KILIMO AI Backend")
+
+# Inaruhusu frontend (index.html - domain/faili tofauti) kuita API hii
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------------------------------------------------------------
 # Pakua model na jedwali MARA MOJA tu wakati server inaanza
-# (siyo kwa kila ombi - hii ndiyo sababu ya utendaji mzuri)
 # ---------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "crop_recommendation_model.pkl")
@@ -47,75 +60,82 @@ else:
     print("⚠️  viwango_vya_mazao.json haipo — weka faili hii kwenye backend/")
 
 
-@app.route("/api/health", methods=["GET"])
-def health():
-    """Angalia kama backend iko tayari - frontend inaweza kuita hii kwanza."""
-    return jsonify({
-        "status": "sawa",
-        "model_A_ipo": model is not None,
-        "jedwali_B_lipo": jedwali_la_viwango is not None,
-        "idadi_ya_mazao": len(jedwali_la_viwango) if jedwali_la_viwango else 0
-    })
+# ---------------------------------------------------------------
+# PYDANTIC MODELS — FastAPI inatumia hizi kuhakiki "sura" ya data
+# (aina sahihi za namba/maandishi) MOJA KWA MOJA, bila sisi kuandika
+# kwa mkono. Bado tunahitaji kuongeza uhakiki wa KIKEMIKALI wenyewe
+# (mfano pH 0-14) - Pydantic haiwezi kujua hilo peke yake.
+# ---------------------------------------------------------------
+class ModelAInput(BaseModel):
+    N: float
+    P: float
+    K: float
+    temperature: float
+    humidity: float
+    ph: float
+    rainfall: float
 
 
-def hakiki_data_ya_model_a(data):
-    """
-    Geti la uhakiki upande wa SERVER - hii ni MUHIMU hata kama frontend
-    tayari inahakiki, kwa sababu mtu anaweza kutuma ombi moja kwa moja
-    kwenye API (mfano kupitia Postman) bila kupitia frontend kabisa.
-    Kanuni: kamwe usiamini data ya frontend pekee - server lazima ijilinde yenyewe.
-    """
+class DiagnoseInput(BaseModel):
+    zao: str
+    usomaji_wa_sasa: Dict[str, float]
+    aina_ya_udongo: str = "tifutifu"
+    ph_ya_maji: Optional[float] = None
+    ujazo_wa_lita: Optional[float] = 100
+
+
+# ---------------------------------------------------------------
+# GETI LA UHAKIKI WA KIKEMIKALI (sawa na Flask - Pydantic haifanyi hii)
+# ---------------------------------------------------------------
+def hakiki_data_ya_model_a(data: ModelAInput):
     makosa = []
-    for k in ['N', 'P', 'K']:
-        thamani = data.get(k, 0)
+    for jina, thamani in [("N", data.N), ("P", data.P), ("K", data.K)]:
         if thamani < 0:
-            makosa.append(f"{k} haiwezi kuwa hasi.")
+            makosa.append(f"{jina} haiwezi kuwa hasi.")
         elif thamani > 300:
-            makosa.append(f"{k} ({thamani}) ni kubwa mno kuwa na maana kikemikali — wigo unaowezekana ni 0 hadi 300.")
-    ph = data.get('ph')
-    if ph is not None and not (0 <= ph <= 14):
+            makosa.append(f"{jina} ({thamani}) ni kubwa mno kuwa na maana kikemikali — wigo unaowezekana ni 0 hadi 300.")
+    if not (0 <= data.ph <= 14):
         makosa.append("pH lazima iwe kati ya 0 na 14.")
-    humidity = data.get('humidity')
-    if humidity is not None and not (0 <= humidity <= 100):
+    if not (0 <= data.humidity <= 100):
         makosa.append("Unyevu lazima uwe kati ya 0 na 100%.")
-    temperature = data.get('temperature')
-    if temperature is not None and not (-10 <= temperature <= 55):
+    if not (-10 <= data.temperature <= 55):
         makosa.append("Joto liko nje ya wigo unaowezekana (-10 hadi 55°C).")
-    if data.get('rainfall', 0) < 0:
+    if data.rainfall < 0:
         makosa.append("Mvua haiwezi kuwa hasi.")
     return makosa
 
 
-@app.route("/api/predict", methods=["POST"])
-def predict():
+@app.get("/api/health")
+def health():
+    """Angalia kama backend iko tayari - frontend inaweza kuita hii kwanza."""
+    return {
+        "status": "sawa",
+        "model_A_ipo": model is not None,
+        "jedwali_B_lipo": jedwali_la_viwango is not None,
+        "idadi_ya_mazao": len(jedwali_la_viwango) if jedwali_la_viwango else 0,
+    }
+
+
+@app.post("/api/predict")
+def predict(payload: ModelAInput):
     """
     MODEL A — Crop Recommendation
     Input (JSON): {N, P, K, temperature, humidity, ph, rainfall}
-    Output (JSON): {zao: "..."}
+    Output (JSON): {zao: "...", top3: [...]}
     """
     if model is None:
-        return jsonify({"hitilafu": "Model A haijapakuliwa upande wa server."}), 500
+        raise HTTPException(status_code=500, detail="Model A haijapakuliwa upande wa server.")
 
-    data = request.get_json(force=True)
-    try:
-        vigezo = [
-            data["N"], data["P"], data["K"],
-            data["temperature"], data["humidity"],
-            data["ph"], data["rainfall"]
-        ]
-    except KeyError as e:
-        return jsonify({"hitilafu": f"Kigezo kinachokosekana: {e}"}), 400
-
-    # GETI LA UHAKIKI - kabla ya kuhesabu chochote
-    makosa = hakiki_data_ya_model_a(data)
+    makosa = hakiki_data_ya_model_a(payload)
     if makosa:
-        return jsonify({"hitilafu": "Data uliyoingiza si sahihi kimantiki:", "makosa": makosa}), 400
+        raise HTTPException(status_code=400, detail={"hitilafu": "Data uliyoingiza si sahihi kimantiki:", "makosa": makosa})
+
+    vigezo = [payload.N, payload.P, payload.K, payload.temperature,
+              payload.humidity, payload.ph, payload.rainfall]
 
     utabiri = model.predict([vigezo])
-    zao = str(utabiri[0])
+    matokeo = {"zao": str(utabiri[0])}
 
-    # Hiari: ongeza uwezekano (probability) wa kila zao la juu kama model inaunga mkono
-    matokeo = {"zao": zao}
     if hasattr(model, "predict_proba"):
         proba = model.predict_proba([vigezo])[0]
         top3_idx = proba.argsort()[-3:][::-1]
@@ -124,41 +144,32 @@ def predict():
             for i in top3_idx
         ]
 
-    return jsonify(matokeo)
+    return matokeo
 
 
-@app.route("/api/diagnose", methods=["POST"])
-def diagnose():
+@app.post("/api/diagnose")
+def diagnose(payload: DiagnoseInput):
     """
     MODEL B — Diagnostic & Correction Tool
-    Input (JSON): {
-        zao, aina_ya_udongo,
-        usomaji_wa_sasa: {N, P, K, temperature, humidity, ph},
-        ph_ya_maji (hiari)
-    }
+    Input (JSON): {zao, usomaji_wa_sasa, aina_ya_udongo, ph_ya_maji, ujazo_wa_lita}
     Output (JSON): ripoti kamili kutoka toa_ripoti_kamili()
+    (Uhakiki wa kikemikali - pH 0-14, N/P/K 0-300, n.k. - unafanywa
+    NDANI ya toa_ripoti_kamili/hakiki_usomaji, kwenye diagnostic_functions.py)
     """
     if jedwali_la_viwango is None:
-        return jsonify({"hitilafu": "Jedwali la Model B halijapakuliwa upande wa server."}), 500
-
-    data = request.get_json(force=True)
-    try:
-        zao = data["zao"]
-        usomaji = data["usomaji_wa_sasa"]
-        aina_ya_udongo = data.get("aina_ya_udongo", "tifutifu")
-        ph_ya_maji = data.get("ph_ya_maji", None)
-    except KeyError as e:
-        return jsonify({"hitilafu": f"Kigezo kinachokosekana: {e}"}), 400
+        raise HTTPException(status_code=500, detail="Jedwali la Model B halijapakuliwa upande wa server.")
 
     ripoti = toa_ripoti_kamili(
-        zao=zao,
-        usomaji_wa_sasa=usomaji,
+        zao=payload.zao,
+        usomaji_wa_sasa=payload.usomaji_wa_sasa,
         jedwali_la_viwango=jedwali_la_viwango,
-        aina_ya_udongo=aina_ya_udongo,
-        ph_ya_maji=ph_ya_maji
+        aina_ya_udongo=payload.aina_ya_udongo,
+        ph_ya_maji=payload.ph_ya_maji,
+        ujazo_wa_lita=payload.ujazo_wa_lita or 100,
     )
-    return jsonify(ripoti)
+    return ripoti
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)

@@ -39,11 +39,17 @@ Fungua tu `index.html` kwenye browser (double-click, au "Open with" browser yako
 
 2. Fungua terminal ndani ya `backend/`:
    ```bash
-   pip install -r requirements.txt
-   python app.py
+   python3 -m pip install -r requirements.txt
+   uvicorn app:app --reload --port 5000
    ```
    Utaona ujumbe: `✅ Model A imepakuliwa.` na `✅ Jedwali la viwango limepakuliwa.`
    Server itafanya kazi kwenye `http://localhost:5000`.
+
+   Njia mbadala (bila `--reload`): `python3 app.py`
+
+   Fungua `http://localhost:5000/docs` kuona API docs zinazojitengeneza
+   wenyewe (Swagger UI) — hapa unaweza kujaribu `/api/predict` na
+   `/api/diagnose` moja kwa moja bila hata kufungua frontend.
 
 3. Fungua `index.html`, nenda sehemu ya "Chanzo cha Data" chini ya ukurasa, weka:
    ```
