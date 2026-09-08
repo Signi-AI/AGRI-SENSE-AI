@@ -13,6 +13,37 @@ Jinsi ya kutumia (kwa backend):
 import json
 
 
+# ---------------------------------------------------------------
+# LABEL ALIASING: Model A v5 iliunganisha aina kadhaa za zao moja
+# (mfano aina nne za pilipili kali) kuwa jina moja la ndani, kwa
+# sababu zina mahitaji ya udongo yanayofanana kivitendo. Mkulima
+# bado anachagua jina mahususi analolifahamu (frontend), lakini
+# kabla ya kuuliza model/jedwali, jina hilo linahitaji "kutafsiriwa"
+# kuwa jina la ndani la model - hii inaitwa "label aliasing".
+# ---------------------------------------------------------------
+MAJINA_MBADALA = {
+    'pilipili_mbuzi': 'pilipili_kali',
+    'pilipili_kichaa': 'pilipili_kali',
+    'pilipili_mwendokasi': 'pilipili_kali',
+    'nyanya_chungu': 'biringanya',
+    'mchicha': 'mboga_za_majani',
+    'chainizi': 'mboga_za_majani',
+    'sukuma_wiki': 'mboga_za_majani',
+    'tembele': 'mboga_za_majani',
+    'mnafu': 'mboga_za_majani',
+}
+
+
+def tafsiri_jina_la_zao(jina_alilochagua_mtumiaji):
+    """
+    Inabadilisha jina la zao alilochagua mtumiaji (frontend) kuwa jina
+    la ndani linalotumiwa na model/jedwali, kama linahitaji tafsiri.
+    Kama jina halihitaji tafsiri (mfano 'maize', 'bamia'), linarudishwa
+    bila kubadilika.
+    """
+    return MAJINA_MBADALA.get(jina_alilochagua_mtumiaji, jina_alilochagua_mtumiaji)
+
+
 def pakua_jedwali_la_viwango(path_ya_json='viwango_vya_mazao.json'):
     """Inapakua JSON na kuirudisha kama dictionary rahisi."""
     with open(path_ya_json) as faili:
@@ -202,8 +233,11 @@ def toa_ripoti_kamili(zao, usomaji_wa_sasa, jedwali_la_viwango, aina_ya_udongo='
     mbolea_maalum: (hiari) dict {'N': {...}, 'P': {...}, 'K': {...}} kama mkulima
                    anataka kutumia mbolea tofauti na default (Urea/TSP/MOP)
     """
+    zao_alilochagua_mtumiaji = zao          # tunahifadhi jina halisi la mtumiaji
+    zao = tafsiri_jina_la_zao(zao)          # jina hili ndilo litakalotumika kutafuta jedwali/model
+
     if zao not in jedwali_la_viwango:
-        return {'hitilafu': f"Zao '{zao}' halipo kwenye database yetu."}
+        return {'hitilafu': f"Zao '{zao_alilochagua_mtumiaji}' halipo kwenye database yetu."}
 
     # GETI LA UHAKIKI: angalia data KABLA ya kuhesabu chochote
     makosa = hakiki_usomaji(usomaji_wa_sasa, ph_ya_maji, ujazo_wa_lita)
@@ -238,13 +272,13 @@ def toa_ripoti_kamili(zao, usomaji_wa_sasa, jedwali_la_viwango, aina_ya_udongo='
 
     if len(marekebisho_yote) == 0:
         return {
-            'zao': zao, 'hali_ya_jumla': 'Nzuri',
+            'zao': zao, 'zao_alilochagua_mtumiaji': zao_alilochagua_mtumiaji, 'hali_ya_jumla': 'Nzuri',
             'ujumbe': f'Hali ya udongo (na maji, kama yalitolewa) inafaa kwa {zao}. Hakuna marekebisho yanayohitajika.',
             'marekebisho': []
         }
 
     return {
-        'zao': zao, 'hali_ya_jumla': 'Kuna matatizo yanayohitaji hatua',
+        'zao': zao, 'zao_alilochagua_mtumiaji': zao_alilochagua_mtumiaji, 'hali_ya_jumla': 'Kuna matatizo yanayohitaji hatua',
         'idadi_ya_matatizo': len(marekebisho_yote),
         'marekebisho': marekebisho_yote
     }
