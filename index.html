@@ -263,6 +263,8 @@
         <div class="field"><label>Joto <span class="unit">°C</span></label><input type="number" step="0.1" min="-10" max="55" id="a-temp" value="22.5"></div>
         <div class="field"><label>Unyevu wa Hewa <span class="unit">%</span></label><input type="number" step="0.1" min="0" max="100" id="a-humidity" value="80"></div>
       </div>
+      <button type="button" class="btn btn-ghost" style="width:100%;margin-bottom:14px;font-size:0.82rem;padding:9px;" onclick="tumiaEneoLangu('a')">📍 Tumia Eneo Langu (jaza Joto/Unyevu kiotomatiki)</button>
+      <p class="hint" id="a-gps-status" style="margin-top:-8px;margin-bottom:14px;"></p>
       <div class="field"><label>Mvua <span class="unit">mm/mwaka</span></label><input type="number" step="0.1" min="0" id="a-rainfall" value="200"></div>
 
       <div class="divider"></div>
@@ -302,6 +304,8 @@
         <div class="field"><label>Joto <span class="unit">°C</span></label><input type="number" step="0.1" min="-10" max="55" id="b-temp" value="30"></div>
         <div class="field"><label>Unyevu <span class="unit">%</span></label><input type="number" step="0.1" min="0" max="100" id="b-humidity" value="65"></div>
       </div>
+      <button type="button" class="btn btn-ghost" style="width:100%;margin-bottom:14px;font-size:0.82rem;padding:9px;" onclick="tumiaEneoLangu('b')">📍 Tumia Eneo Langu (jaza Joto/Unyevu kiotomatiki)</button>
+      <p class="hint" id="b-gps-status" style="margin-top:-8px;margin-bottom:14px;"></p>
       <div class="field">
         <label>Aina ya Udongo</label>
         <select id="b-soiltype">
@@ -451,6 +455,46 @@ function hakikiDataYaModelA(payload){
   return makosa;
 }
 
+/* ---------- GPS / WEATHER AUTO-FILL ---------- */
+function tumiaEneoLangu(panel){
+  const statusEl = document.getElementById(panel + '-gps-status');
+  const backendUrl = document.getElementById('backend-url').value.trim();
+
+  if(!backendUrl){
+    statusEl.textContent = 'Weka kwanza "API URL" ya backend chini ya ukurasa - kipengele hiki kinahitaji backend.';
+    return;
+  }
+  if(!navigator.geolocation){
+    statusEl.textContent = 'Kivinjari chako hakiwezi kutumia GPS.';
+    return;
+  }
+
+  statusEl.textContent = 'Inatafuta eneo lako...';
+
+  navigator.geolocation.getCurrentPosition(async (position) => {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+    statusEl.textContent = 'Inachukua hali ya hewa ya eneo lako...';
+
+    try{
+      const res = await fetch(`${backendUrl.replace(/\/$/,'')}/api/weather?lat=${lat}&lon=${lon}`);
+      if(!res.ok){
+        const err = await res.json().catch(()=>({}));
+        statusEl.textContent = (err.detail || 'Imeshindwa kupata hali ya hewa.');
+        return;
+      }
+      const data = await res.json();
+      document.getElementById(panel + '-temp').value = data.temperature;
+      document.getElementById(panel + '-humidity').value = data.humidity;
+      statusEl.textContent = `Joto na unyevu vimejazwa kutoka ${data.mahali || 'eneo lako'}. Mvua bado unahitaji kuijaza mwenyewe.`;
+    }catch(err){
+      statusEl.textContent = 'Imeshindwa kuunganisha na backend.';
+    }
+  }, (error) => {
+    statusEl.textContent = 'Imeshindwa kupata eneo lako - hakikisha umeruhusu GPS kwenye kivinjari.';
+  });
+}
+
 async function runModelA(){
   const payload = {
     N: parseFloat(document.getElementById('a-N').value),
@@ -466,7 +510,7 @@ async function runModelA(){
   if(makosa.length > 0){
     const box = document.getElementById('results-a');
     box.innerHTML = `<div class="result-card">
-      <div class="status-banner bad">⚠️ Data uliyoingiza si sahihi kimantiki:</div>
+      <div class="status-banner bad">Data uliyoingiza si sahihi kimantiki:</div>
       <ul style="margin:10px 0 0;padding-left:20px;">
         ${makosa.map(m=>`<li style="margin-bottom:4px;">${m}</li>`).join('')}
       </ul>
@@ -740,11 +784,11 @@ function renderDiagnosticReport(ripoti, usomaji, cropStats){
   }
   let html = '';
   if(ripoti.hali === 'Nzuri'){
-    html += `<div class="status-banner ok">✅ Hali ya udongo (na maji) inafaa kwa ${ripoti.zao}</div>`;
+    html += `<div class="status-banner ok">Hali ya udongo (na maji) inafaa kwa ${ripoti.zao}</div>`;
     box.innerHTML = html;
     return;
   }
-  html += `<div class="status-banner bad">⚠️ Matatizo ${ripoti.marekebisho.length} yaliyogundulika kwa ${ripoti.zao}</div>`;
+  html += `<div class="status-banner bad">Matatizo ${ripoti.marekebisho.length} yaliyogundulika kwa ${ripoti.zao}</div>`;
 
   ripoti.marekebisho.forEach(m=>{
     const info = m.tofautiInfo;

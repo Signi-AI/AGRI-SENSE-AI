@@ -1,21 +1,15 @@
 """
 KILIMO AI — Backend (FastAPI)
 ==============================
-Toleo la FastAPI la backend hii (badala ya Flask). Inatumia faili tatu
+Toleo la FastAPI la backend hii inatumia faili tatu
 zile zile za ML:
-  - crop_recommendation_model.pkl  (Model A)
-  - viwango_vya_mazao.json         (data ya Model B)
-  - diagnostic_functions.py        (functions za Model B)
-
-JINSI YA KUENDESHA:
-  1. Nakili faili tatu hapo juu ndani ya folder hii hii (backend/)
-  2. python3 -m pip install -r requirements.txt
-  3. uvicorn app:app --reload --port 5000
-     (au: python3 app.py — zote mbili zinafanya kazi, lakini uvicorn
-      inatoa --reload ya kuchunguza mabadiliko ya code moja kwa moja)
-  4. Fungua http://127.0.0.1:5000/docs kuona API docs zinazojitengeneza wenyewe
-  5. Fungua frontend (index.html) na weka API URL: http://127.0.0.1:5000
+  - crop_recommendation_model.pkl  
+  - viwango_vya_mazao.json         
+  - diagnostic_functions.py        
 """
+
+
+
 
 import os
 from typing import Optional, Dict
@@ -24,17 +18,32 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
+import requests
 
 from diagnostic_functions import pakua_jedwali_la_viwango, toa_ripoti_kamili
 
-app = FastAPI(title="KILIMO AI Backend")
+app = FastAPI(title="AGRI-SENSE")
+
+# ---------------------------------------------------------------
+# Weather API - "API key" inasomwa kutoka environment variable,
+# KAMWE isiandikwe moja kwa moja ndani ya code (usalama). Pata key
+# ya bure kwenye https://openweathermap.org/api kisha:
+#   export OPENWEATHER_API_KEY="Key_yako_hapa"  (Mac/Linux)
+#   $env:OPENWEATHER_API_KEY="key_yako_hapa"  (Windows PowerShell)
+# kabla ya kuendesha uvicorn.
+# ---------------------------------------------------------------
+OPENWEATHER_API_KEY = os.environ.get("3085db85ea4d410c550d70f6aa7ba6c8")
+if OPENWEATHER_API_KEY:
+    print("Weather API key imepatikana - kipengele cha GPS/hali ya hewa kiko tayari.")
+else:
+    print("OPENWEATHER_API_KEY haijawekwa - /api/weather haitafanya kazi mpaka uiweke.")
 
 # Inaruhusu frontend (index.html - domain/faili tofauti) kuita API hii
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
+    allow_credentials=True,
     allow_headers=["*"],
 )
 
@@ -50,15 +59,15 @@ jedwali_la_viwango = None
 
 if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
-    print("✅ Model A imepakuliwa.")
+    print("Model A imepakuliwa.")
 else:
-    print("⚠️  crop_recommendation_model.pkl haipo — weka faili hii kwenye backend/")
+    print("crop_recommendation_model.pkl haipo — weka faili hii kwenye backend/")
 
 if os.path.exists(JSON_PATH):
     jedwali_la_viwango = pakua_jedwali_la_viwango(JSON_PATH)
-    print(f"✅ Jedwali la viwango limepakuliwa ({len(jedwali_la_viwango)} mazao).")
+    print(f"Jedwali la viwango limepakuliwa ({len(jedwali_la_viwango)} mazao).")
 else:
-    print("⚠️  viwango_vya_mazao.json haipo — weka faili hii kwenye backend/")
+    print("viwango_vya_mazao.json haipo — weka faili hii kwenye backend/")
 
 
 # ---------------------------------------------------------------
@@ -114,6 +123,40 @@ def health():
         "model_A_ipo": model is not None,
         "jedwali_B_lipo": jedwali_la_viwango is not None,
         "idadi_ya_mazao": len(jedwali_la_viwango) if jedwali_la_viwango else 0,
+    }
+
+
+@app.get("/api/weather")
+def weather(lat: float, lon: float):
+    """
+    Inachukua temperature (°C) na humidity (%) ya SASA kwa eneo la mtumiaji
+    (kutoka GPS ya kivinjari chake), kupitia OpenWeatherMap.
+
+    MUHIMU: 'rainfall' HAIRUDISHWI hapa kimakusudi. Kigezo cha 'rainfall'
+    kwenye Model A/B ni WASTANI WA MVUA YA MWAKA (mm/year), wakati Weather
+    API inatoa tu mvua ya saa chache zilizopita - vipimo viwili tofauti
+    kabisa. Kuchanganya hivi kungempotosha mkulima, kwa hiyo rainfall
+    inabaki kujazwa kwa mkono na mtumiaji.
+    """
+    if not OPENWEATHER_API_KEY:
+        raise HTTPException(status_code=500, detail="OPENWEATHER_API_KEY haijawekwa upande wa server.")
+
+    try:
+        res = requests.get(
+            "https://api.openweathermap.org/data/2.5/weather",
+            params={"lat": lat, "lon": lon, "appid": OPENWEATHER_API_KEY, "units": "metric"},
+            timeout=8,
+        )
+        res.raise_for_status()
+        data = res.json()
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Imeshindwa kufikia Weather API: {e}")
+
+    return {
+        "temperature": data["main"]["temp"],
+        "humidity": data["main"]["humidity"],
+        "mahali": data.get("name", ""),
+        "ujumbe": "Mvua (rainfall) haijajazwa kiotomatiki - tafadhali ijaze mwenyewe (wastani wa mm/mwaka).",
     }
 
 
