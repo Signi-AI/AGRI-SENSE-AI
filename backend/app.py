@@ -1,5 +1,5 @@
 """
-KILIMO AI — Backend (FastAPI)
+AGRI-SENSE AI — Backend (FastAPI)
 ==============================
 Toleo la FastAPI la backend hii inatumia faili tatu
 zile zile za ML:
@@ -32,7 +32,7 @@ app = FastAPI(title="AGRI-SENSE")
 #   $env:OPENWEATHER_API_KEY="key_yako_hapa"  (Windows PowerShell)
 # kabla ya kuendesha uvicorn.
 # ---------------------------------------------------------------
-OPENWEATHER_API_KEY = os.environ.get("3085db85ea4d410c550d70f6aa7ba6c8")
+OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 if OPENWEATHER_API_KEY:
     print("Weather API key imepatikana - kipengele cha GPS/hali ya hewa kiko tayari.")
 else:
@@ -94,9 +94,9 @@ class DiagnoseInput(BaseModel):
     ujazo_wa_lita: Optional[float] = 100
 
 
-# ---------------------------------------------------------------
-# GETI LA UHAKIKI WA KIKEMIKALI (sawa na Flask - Pydantic haifanyi hii)
-# ---------------------------------------------------------------
+# ------------------------------
+# GETI LA UHAKIKI WA KIKEMIKALI 
+# ------------------------------
 def hakiki_data_ya_model_a(data: ModelAInput):
     makosa = []
     for jina, thamani in [("N", data.N), ("P", data.P), ("K", data.K)]:
