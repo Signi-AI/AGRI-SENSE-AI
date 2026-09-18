@@ -1,0 +1,4 @@
+import React from 'react'
+import { Bell, CheckCircle2, TriangleAlert } from 'lucide-react'
+import { useLanguage } from '../i18n'
+export function Notifications(){const {t}=useLanguage();const items=[[t('nutrientAlert'),t('nutrientAlertDesc'),TriangleAlert,'red'],[t('stable'),t('stableDesc'),CheckCircle2,'green'],[t('sensorReady'),t('sensorReadyDesc'),Bell,'green']];return <main className="mx-auto max-w-4xl px-4 py-7 sm:px-8"><p className="section-kicker">{t('updates')}</p><h1 className="text-3xl font-extrabold sm:text-4xl">{t('notifications')}</h1><div className="mt-8 space-y-3">{items.map(([a,b,I,c])=><div className="card flex gap-4 p-5" key={a}><span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${c==='red'?'bg-red-50 text-red-600':'bg-mint text-leaf'}`}><I size={19}/></span><div><h2 className="font-extrabold">{a}</h2><p className="mt-1 text-sm text-slate-500">{b}</p></div></div>)}</div></main>}

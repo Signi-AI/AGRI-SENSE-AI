@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color-scheme: light; }
+:root.dark { color-scheme: dark; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #f7faf6; color: #173f2a; }
+.dark body { background: #0b1710; color: #ecf7ef; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+::selection { background: #bde8c6; color: #173f2a; }
+
+@layer components {
+  .glass { @apply bg-white/80 backdrop-blur-xl border border-white/50 dark:bg-slate-900/75 dark:border-white/10; }
+  .card { @apply rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition duration-200; }
+  .btn-primary { @apply btn bg-forest text-white hover:-translate-y-0.5 hover:bg-[#205a3a] dark:bg-leaf; }
+  .btn-soft { @apply btn border border-slate-200 bg-white text-forest hover:bg-mint dark:border-white/10 dark:bg-slate-800 dark:text-white; }
+  .input { @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-leaf focus:ring-4 focus:ring-green-100 dark:border-white/10 dark:bg-slate-800 dark:focus:ring-green-900; }
+  .label { @apply mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400; }
+  .section-kicker { @apply mb-3 text-xs font-extrabold uppercase tracking-[.18em] text-leaf; }
+}
+
+@layer components {
+  .status-pill { @apply rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide; }
+  .status-good { @apply bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300; }
+  .status-danger { @apply bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-300; }
+  .section-space { @apply py-20 sm:py-24; }
+}
+
+@media (max-width: 360px) {
+  .btn { @apply px-4; }
+}
