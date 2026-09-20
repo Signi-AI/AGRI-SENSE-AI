@@ -1,17 +1,17 @@
 import React, { useState } from 'react'
-import { Bot, Send, Sparkles } from 'lucide-react'
+import { Bot, Send, Sparkles, LoaderCircle } from 'lucide-react'
 import { useLanguage } from '../i18n'
+
+const API_URL = import.meta.env.VITE_API_URL
 
 export function AIAdvisor() {
   const { t } = useLanguage()
 
   const [q, setQ] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const [messages, setMessages] = useState([
-    {
-      role: 'ai',
-      text: t('advisorWelcome'),
-    },
+    { role: 'ai', text: t('advisorWelcome') },
   ])
 
   const suggestedQuestions = [
@@ -23,22 +23,35 @@ export function AIAdvisor() {
     'How can I protect my crops from pests?',
   ]
 
-  const sendQuestion = (question) => {
-    if (!question.trim()) return
+  const sendQuestion = async (question) => {
+    if (!question.trim() || loading) return
 
-    setMessages((v) => [
-      ...v,
-      {
-        role: 'user',
-        text: question,
-      },
-      {
-        role: 'ai',
-        text: t('demoResponse'),
-      },
-    ])
-
+    setMessages((v) => [...v, { role: 'user', text: question }])
     setQ('')
+    setLoading(true)
+
+    try {
+      const res = await fetch(`${API_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ujumbe: question }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        throw new Error(json.detail || 'Server error')
+      }
+
+      setMessages((v) => [...v, { role: 'ai', text: json.jibu }])
+    } catch (err) {
+      setMessages((v) => [
+        ...v,
+        { role: 'ai', text: 'Samahani, imeshindikana kupata jibu sasa hivi. Jaribu tena baadaye.' },
+      ])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const send = (e) => {
@@ -53,57 +66,44 @@ export function AIAdvisor() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-7 sm:px-8">
       <p className="section-kicker">{t('intelligence')}</p>
-
-      <h1 className="text-3xl font-extrabold sm:text-4xl">
-        {t('advisor')}
-      </h1>
-
+      <h1 className="text-3xl font-extrabold sm:text-4xl">{t('advisor')}</h1>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-        Ask AgriSense AI about your farm, soil, crops, weather, or farming
-        practices.
+        Ask AgriSense AI about your farm, soil, crops, weather, or farming practices.
       </p>
 
       <div className="card mt-8 overflow-hidden">
 
-        {/* Chat Messages */}
         <div className="max-h-[55vh] space-y-4 overflow-y-auto p-5 sm:p-6">
           {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`flex gap-3 ${
-                m.role === 'user' ? 'justify-end' : ''
-              }`}
-            >
+            <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : ''}`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${
+                className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${
                   m.role === 'user'
                     ? 'bg-forest text-white'
                     : 'bg-mint text-forest dark:bg-green-950/40 dark:text-green-100'
                 }`}
               >
-                {m.role === 'ai' && (
-                  <Bot
-                    size={15}
-                    className="mb-1 mr-2 inline"
-                  />
-                )}
-
+                {m.role === 'ai' && <Bot size={15} className="mb-1 mr-2 inline" />}
                 {m.text}
               </div>
             </div>
           ))}
+
+          {loading && (
+            <div className="flex gap-3">
+              <div className="max-w-[85%] rounded-2xl bg-mint px-4 py-3 text-sm text-forest dark:bg-green-950/40 dark:text-green-100">
+                <LoaderCircle size={15} className="mr-2 inline animate-spin" />
+                Inaandika...
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Suggested Questions */}
         <div className="border-t px-4 py-4 dark:border-white/10 sm:px-6">
           <div className="mb-3 flex items-center gap-2">
             <Sparkles size={17} className="text-leaf" />
-
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
-              Suggested questions
-            </p>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">Suggested questions</p>
           </div>
-
           <div className="flex flex-wrap gap-2">
             {suggestedQuestions.map((question, index) => (
               <button
@@ -118,21 +118,18 @@ export function AIAdvisor() {
           </div>
         </div>
 
-        {/* Input */}
-        <form
-          onSubmit={send}
-          className="border-t p-4 dark:border-white/10"
-        >
+        <form onSubmit={send} className="border-t p-4 dark:border-white/10">
           <div className="flex gap-2">
             <input
               className="input min-w-0 flex-1"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t('askFarm')}
+              disabled={loading}
             />
-
             <button
               type="submit"
+              disabled={loading}
               aria-label="Send"
               className="btn-primary shrink-0 px-4"
             >

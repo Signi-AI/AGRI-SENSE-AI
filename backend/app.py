@@ -8,11 +8,11 @@ zile zile za ML:
   - diagnostic_functions.py        
 """
 
-
-
-
 import os
 from typing import Optional, Dict
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,16 +27,38 @@ app = FastAPI(title="AGRI-SENSE")
 # ---------------------------------------------------------------
 # Weather API - "API key" inasomwa kutoka environment variable,
 # KAMWE isiandikwe moja kwa moja ndani ya code (usalama). Pata key
-# ya bure kwenye https://openweathermap.org/api kisha:
-#   export OPENWEATHER_API_KEY="Key_yako_hapa"  (Mac/Linux)
-#   $env:OPENWEATHER_API_KEY="key_yako_hapa"  (Windows PowerShell)
-# kabla ya kuendesha uvicorn.
+# ya bure kwenye https://openweathermap.org/api kisha weka kwenye
+# faili ya .env (localhost) au Render Environment Variables
+# (production) kama: OPENWEATHER_API_KEY=key_yako_hapa
 # ---------------------------------------------------------------
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 if OPENWEATHER_API_KEY:
     print("Weather API key imepatikana - kipengele cha GPS/hali ya hewa kiko tayari.")
 else:
     print("OPENWEATHER_API_KEY haijawekwa - /api/weather haitafanya kazi mpaka uiweke.")
+
+# ---------------------------------------------------------------
+# Gemini API - kwa ajili ya "AI Advisor" (chat). Tunaita REST API
+# moja kwa moja (kupitia 'requests'), badala ya SDK ya google-
+# generativeai, ili kuepuka utegemezi mzito (cryptography/Rust)
+# usiofanya kazi vizuri kwenye baadhi ya mifumo. Pata key ya bure
+# kwenye https://aistudio.google.com/apikey kisha weka kwenye .env
+# (localhost) au Render Environment Variables (production) kama:
+#   GEMINI_API_KEY=key_yako_hapa
+# ---------------------------------------------------------------
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
+if GEMINI_API_KEY:
+    print("Gemini AI imepatikana - AI Advisor iko tayari.")
+else:
+    print("GEMINI_API_KEY haijawekwa - /api/chat haitafanya kazi mpaka uiweke.")
+
+MFUMO_WA_AI = """
+Wewe ni AgriSense AI - mshauri wa kilimo mwenye ujuzi kwa wakulima wa Tanzania.
+Jibu maswali kwa ufupi, kwa lugha rahisi, ukizingatia mazingira ya kilimo Afrika Mashariki.
+Kama swali halihusiani na kilimo, eleza kwa upole kuwa unaweza kusaidia tu na mada za kilimo.
+"""
 
 # Inaruhusu frontend (index.html - domain/faili tofauti) kuita API hii
 app.add_middleware(
@@ -70,12 +92,6 @@ else:
     print("viwango_vya_mazao.json haipo — weka faili hii kwenye backend/")
 
 
-# ---------------------------------------------------------------
-# PYDANTIC MODELS — FastAPI inatumia hizi kuhakiki "sura" ya data
-# (aina sahihi za namba/maandishi) MOJA KWA MOJA, bila sisi kuandika
-# kwa mkono. Bado tunahitaji kuongeza uhakiki wa KIKEMIKALI wenyewe
-# (mfano pH 0-14) - Pydantic haiwezi kujua hilo peke yake.
-# ---------------------------------------------------------------
 class ModelAInput(BaseModel):
     N: float
     P: float
@@ -94,9 +110,10 @@ class DiagnoseInput(BaseModel):
     ujazo_wa_lita: Optional[float] = 100
 
 
-# ------------------------------
-# GETI LA UHAKIKI WA KIKEMIKALI 
-# ------------------------------
+class UjumbeWaChat(BaseModel):
+    ujumbe: str
+
+
 def hakiki_data_ya_model_a(data: ModelAInput):
     makosa = []
     for jina, thamani in [("N", data.N), ("P", data.P), ("K", data.K)]:
@@ -123,21 +140,12 @@ def health():
         "model_A_ipo": model is not None,
         "jedwali_B_lipo": jedwali_la_viwango is not None,
         "idadi_ya_mazao": len(jedwali_la_viwango) if jedwali_la_viwango else 0,
+        "ai_advisor_ipo": GEMINI_API_KEY is not None,
     }
 
 
 @app.get("/api/weather")
 def weather(lat: float, lon: float):
-    """
-    Inachukua temperature (°C) na humidity (%) ya SASA kwa eneo la mtumiaji
-    (kutoka GPS ya kivinjari chake), kupitia OpenWeatherMap.
-
-    MUHIMU: 'rainfall' HAIRUDISHWI hapa kimakusudi. Kigezo cha 'rainfall'
-    kwenye Model A/B ni WASTANI WA MVUA YA MWAKA (mm/year), wakati Weather
-    API inatoa tu mvua ya saa chache zilizopita - vipimo viwili tofauti
-    kabisa. Kuchanganya hivi kungempotosha mkulima, kwa hiyo rainfall
-    inabaki kujazwa kwa mkono na mtumiaji.
-    """
     if not OPENWEATHER_API_KEY:
         raise HTTPException(status_code=500, detail="OPENWEATHER_API_KEY haijawekwa upande wa server.")
 
@@ -162,11 +170,6 @@ def weather(lat: float, lon: float):
 
 @app.post("/api/predict")
 def predict(payload: ModelAInput):
-    """
-    MODEL A — Crop Recommendation
-    Input (JSON): {N, P, K, temperature, humidity, ph, rainfall}
-    Output (JSON): {zao: "...", top3: [...]}
-    """
     if model is None:
         raise HTTPException(status_code=500, detail="Model A haijapakuliwa upande wa server.")
 
@@ -193,13 +196,6 @@ def predict(payload: ModelAInput):
 
 @app.post("/api/diagnose")
 def diagnose(payload: DiagnoseInput):
-    """
-    MODEL B — Diagnostic & Correction Tool
-    Input (JSON): {zao, usomaji_wa_sasa, aina_ya_udongo, ph_ya_maji, ujazo_wa_lita}
-    Output (JSON): ripoti kamili kutoka toa_ripoti_kamili()
-    (Uhakiki wa kikemikali - pH 0-14, N/P/K 0-300, n.k. - unafanywa
-    NDANI ya toa_ripoti_kamili/hakiki_usomaji, kwenye diagnostic_functions.py)
-    """
     if jedwali_la_viwango is None:
         raise HTTPException(status_code=500, detail="Jedwali la Model B halijapakuliwa upande wa server.")
 
@@ -212,6 +208,34 @@ def diagnose(payload: DiagnoseInput):
         ujazo_wa_lita=payload.ujazo_wa_lita or 100,
     )
     return ripoti
+
+
+@app.post("/api/chat")
+def chat(payload: UjumbeWaChat):
+    if not GEMINI_API_KEY:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY haijawekwa upande wa server.")
+
+    if not payload.ujumbe or not payload.ujumbe.strip():
+        raise HTTPException(status_code=400, detail="Tafadhali andika swali kabla ya kutuma.")
+
+    try:
+        res = requests.post(
+            f"{GEMINI_URL}?key={GEMINI_API_KEY}",
+            json={
+                "contents": [{
+                    "parts": [{"text": f"{MFUMO_WA_AI}\n\nSwali la mkulima: {payload.ujumbe}"}]
+                }]
+            },
+            timeout=15,
+        )
+        res.raise_for_status()
+        data = res.json()
+        jibu = data["candidates"][0]["content"]["parts"][0]["text"]
+        return {"jibu": jibu}
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Imeshindwa kupata jibu kutoka Gemini: {e}")
+    except (KeyError, IndexError):
+        raise HTTPException(status_code=502, detail="Gemini imerudisha muundo usiotegemewa wa jibu.")
 
 
 if __name__ == "__main__":
