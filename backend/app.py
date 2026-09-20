@@ -38,21 +38,21 @@ else:
     print("OPENWEATHER_API_KEY haijawekwa - /api/weather haitafanya kazi mpaka uiweke.")
 
 # ---------------------------------------------------------------
-# Gemini API - kwa ajili ya "AI Advisor" (chat). Tunaita REST API
-# moja kwa moja (kupitia 'requests'), badala ya SDK ya google-
-# generativeai, ili kuepuka utegemezi mzito (cryptography/Rust)
-# usiofanya kazi vizuri kwenye baadhi ya mifumo. Pata key ya bure
-# kwenye https://aistudio.google.com/apikey kisha weka kwenye .env
-# (localhost) au Render Environment Variables (production) kama:
-#   GEMINI_API_KEY=key_yako_hapa
+# Groq API - kwa ajili ya "AI Advisor" (chat). Groq inafuata muundo
+# wa OpenAI (chat/completions), na uthibitisho (auth) unapitia
+# "header" (Authorization: Bearer ...), siyo kwenye URL kama Gemini.
+# Pata key ya bure kwenye https://console.groq.com/keys kisha weka
+# kwenye .env (localhost) au Render Environment Variables
+# (production) kama: GROQ_API_KEY=key_yako_hapa
 # ---------------------------------------------------------------
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "openai/gpt-oss-120b" # model imara, ya bure, yenye uwezo mzuri
 
-if GEMINI_API_KEY:
-    print("Gemini AI imepatikana - AI Advisor iko tayari.")
+if GROQ_API_KEY:
+    print("Groq AI imepatikana - AI Advisor iko tayari.")
 else:
-    print("GEMINI_API_KEY haijawekwa - /api/chat haitafanya kazi mpaka uiweke.")
+    print("GROQ_API_KEY haijawekwa - /api/chat haitafanya kazi mpaka uiweke.")
 
 MFUMO_WA_AI = """
 Wewe ni AgriSense AI - mshauri wa kilimo mwenye ujuzi kwa wakulima wa Tanzania.
@@ -140,7 +140,7 @@ def health():
         "model_A_ipo": model is not None,
         "jedwali_B_lipo": jedwali_la_viwango is not None,
         "idadi_ya_mazao": len(jedwali_la_viwango) if jedwali_la_viwango else 0,
-        "ai_advisor_ipo": GEMINI_API_KEY is not None,
+        "ai_advisor_ipo": GROQ_API_KEY is not None,
     }
 
 
@@ -212,30 +212,40 @@ def diagnose(payload: DiagnoseInput):
 
 @app.post("/api/chat")
 def chat(payload: UjumbeWaChat):
-    if not GEMINI_API_KEY:
-        raise HTTPException(status_code=500, detail="GEMINI_API_KEY haijawekwa upande wa server.")
+    """
+    AI Advisor - Chatbot inayotumia Groq (muundo wa OpenAI chat/completions)
+    kumjibu mkulima maswali ya wazi kuhusu kilimo.
+    """
+    if not GROQ_API_KEY:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY haijawekwa upande wa server.")
 
     if not payload.ujumbe or not payload.ujumbe.strip():
         raise HTTPException(status_code=400, detail="Tafadhali andika swali kabla ya kutuma.")
 
     try:
         res = requests.post(
-            f"{GEMINI_URL}?key={GEMINI_API_KEY}",
+            GROQ_URL,
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
             json={
-                "contents": [{
-                    "parts": [{"text": f"{MFUMO_WA_AI}\n\nSwali la mkulima: {payload.ujumbe}"}]
-                }]
+                "model": GROQ_MODEL,
+                "messages": [
+                    {"role": "system", "content": MFUMO_WA_AI},
+                    {"role": "user", "content": payload.ujumbe},
+                ],
             },
             timeout=15,
         )
         res.raise_for_status()
         data = res.json()
-        jibu = data["candidates"][0]["content"]["parts"][0]["text"]
+        jibu = data["choices"][0]["message"]["content"]
         return {"jibu": jibu}
     except requests.exceptions.RequestException as e:
-        raise HTTPException(status_code=502, detail=f"Imeshindwa kupata jibu kutoka Gemini: {e}")
+        raise HTTPException(status_code=502, detail=f"Imeshindwa kupata jibu kutoka Groq: {e}")
     except (KeyError, IndexError):
-        raise HTTPException(status_code=502, detail="Gemini imerudisha muundo usiotegemewa wa jibu.")
+        raise HTTPException(status_code=502, detail="Groq imerudisha muundo usiotegemewa wa jibu.")
 
 
 if __name__ == "__main__":
