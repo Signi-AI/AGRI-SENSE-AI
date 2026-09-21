@@ -9,6 +9,7 @@ export function Weather() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [gpsBanner, setGpsBanner] = useState(false)
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -20,6 +21,10 @@ export function Weather() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords
+
+        setGpsBanner(true)
+        setTimeout(() => setGpsBanner(false), 4000)
+
         try {
           const res = await fetch(`${API_URL}/api/weather?lat=${latitude}&lon=${longitude}`)
           if (!res.ok) throw new Error('Server error')
@@ -38,9 +43,17 @@ export function Weather() {
     )
   }, [])
 
+  const GpsBanner = () =>
+    gpsBanner ? (
+      <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-full bg-leaf px-4 py-2 text-sm font-bold text-white shadow-lg">
+        📍 GPS imepatikana — tunapakia hali ya hewa ya eneo lako
+      </div>
+    ) : null
+
   if (loading) {
     return (
       <main className="mx-auto max-w-7xl px-4 py-7 sm:px-8">
+        <GpsBanner />
         <p className="section-kicker">{t('climate')}</p>
         <h1 className="text-3xl font-extrabold sm:text-4xl">{t('weather')}</h1>
         <p className="mt-8 text-slate-500">Inapakia hali ya hewa...</p>
@@ -65,6 +78,7 @@ export function Weather() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-7 sm:px-8">
+      <GpsBanner />
       <p className="section-kicker">{t('climate')}</p>
       <h1 className="text-3xl font-extrabold sm:text-4xl">{t('weather')}</h1>
 
@@ -103,3 +117,5 @@ export function Weather() {
     </main>
   )
 }
+
+export default Weather

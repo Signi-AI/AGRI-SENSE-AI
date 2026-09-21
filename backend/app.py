@@ -47,7 +47,7 @@ else:
 # ---------------------------------------------------------------
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "openai/gpt-oss-120b" # model imara, ya bure, yenye uwezo mzuri
+GROQ_MODEL = "llama-3.3-70b-versatile"   # model imara, ya bure, yenye uwezo mzuri
 
 if GROQ_API_KEY:
     print("Groq AI imepatikana - AI Advisor iko tayari.")
@@ -58,6 +58,10 @@ MFUMO_WA_AI = """
 Wewe ni AgriSense AI - mshauri wa kilimo mwenye ujuzi kwa wakulima wa Tanzania.
 Jibu maswali kwa ufupi, kwa lugha rahisi, ukizingatia mazingira ya kilimo Afrika Mashariki.
 Kama swali halihusiani na kilimo, eleza kwa upole kuwa unaweza kusaidia tu na mada za kilimo.
+
+MUHIMU KUHUSU LUGHA: Daima jibu kwa LUGHA ILE ILE aliyotumia mtumiaji kuuliza swali.
+Kama ameuliza kwa Kiingereza, jibu kwa Kiingereza. Kama ameuliza kwa Kiswahili, jibu
+kwa Kiswahili. Usibadilishe lugha ya mtumiaji kwenda lugha nyingine kamwe.
 """
 
 # Inaruhusu frontend (index.html - domain/faili tofauti) kuita API hii

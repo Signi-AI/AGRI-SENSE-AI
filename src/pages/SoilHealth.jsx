@@ -92,6 +92,7 @@ export function SoilHealth() {
       }
 
       setDiagnosis(json)
+      localStorage.setItem('agrisense_last_soil_check', new Date().toISOString())
     } catch (err) {
       setError(err.message || 'Imeshindikana kupata uchunguzi. Jaribu tena.')
     } finally {
