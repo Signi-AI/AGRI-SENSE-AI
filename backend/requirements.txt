@@ -9,3 +9,7 @@ psycopg2
 pydantic-settings
 alembic
 sqlalchemy
+pwdlib[argon2]
+python-jose[cryptography]
+pydantic[email]
+python-multipart
