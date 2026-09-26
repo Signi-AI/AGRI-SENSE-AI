@@ -13,4 +13,4 @@ python-jose[cryptography]
 pydantic[email]
 python-multipart
 passlib[bcrypt]
-psycopg2-binary
+psycopg[binary]
