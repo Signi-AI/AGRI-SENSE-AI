@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+
 import { Navbar, Sidebar } from './components/layout'
+
 import { Home } from './pages/Home'
 import { Auth } from './pages/Auth'
 import { Dashboard } from './pages/Dashboard'
@@ -16,8 +18,13 @@ import { Contact } from './pages/Contact'
 import { Workspace } from './pages/Workspace'
 import { PrivacySecurity } from './pages/PrivacySecurity'
 
-function PublicLayout() {
-  return <><Navbar /><Outlet /></>
+function PublicLayout({ theme, setTheme }) {
+  return (
+    <>
+      <Navbar />
+      <Outlet context={{ theme, setTheme }} />
+    </>
+  )
 }
 
 function AppLayout({ theme, setTheme }) {
@@ -36,6 +43,7 @@ function AppLayout({ theme, setTheme }) {
           setTheme={setTheme}
           onMenu={() => setMobileMenuOpen(true)}
         />
+
         <main className="min-w-0 overflow-x-hidden">
           <Outlet />
         </main>
@@ -47,29 +55,127 @@ function AppLayout({ theme, setTheme }) {
 export function AppRoutes({ theme, setTheme }) {
   return (
     <Routes>
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<Home focus="about" />} />
-        <Route path="/solution" element={<Home focus="solution" />} />
+      {/* PUBLIC PAGES */}
+      <Route
+        element={
+          <PublicLayout
+            theme={theme}
+            setTheme={setTheme}
+          />
+        }
+      >
+        <Route
+          path="/"
+          element={
+            <Home
+              theme={theme}
+              setTheme={setTheme}
+            />
+          }
+        />
+
+        <Route
+          path="/about"
+          element={
+            <Home
+              focus="about"
+              theme={theme}
+              setTheme={setTheme}
+            />
+          }
+        />
+
+        <Route
+          path="/solution"
+          element={
+            <Home
+              focus="solution"
+              theme={theme}
+              setTheme={setTheme}
+            />
+          }
+        />
+
         <Route path="/contact" element={<Contact />} />
+
         <Route path="/auth" element={<Auth />} />
       </Route>
 
-      <Route element={<AppLayout theme={theme} setTheme={setTheme} />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/workspace" element={<Workspace />} />
-        <Route path="/farms" element={<Farms />} />
-        <Route path="/soil-health" element={<SoilHealth />} />
-        <Route path="/weather" element={<Weather />} />
-        <Route path="/ai-advisor" element={<AIAdvisor />} />
-        <Route path="/crop-recommendation" element={<CropRecommendation />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<Settings theme={theme} setTheme={setTheme} />} />
-        <Route path="/privacy-security" element={<PrivacySecurity />} />
+      {/* APP PAGES */}
+      <Route
+        element={
+          <AppLayout
+            theme={theme}
+            setTheme={setTheme}
+          />
+        }
+      >
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
+
+        <Route
+          path="/workspace"
+          element={<Workspace />}
+        />
+
+        <Route
+          path="/farms"
+          element={<Farms />}
+        />
+
+        <Route
+          path="/soil-health"
+          element={<SoilHealth />}
+        />
+
+        <Route
+          path="/weather"
+          element={<Weather />}
+        />
+
+        <Route
+          path="/ai-advisor"
+          element={<AIAdvisor />}
+        />
+
+        <Route
+          path="/crop-recommendation"
+          element={<CropRecommendation />}
+        />
+
+        <Route
+          path="/notifications"
+          element={<Notifications />}
+        />
+
+        <Route
+          path="/profile"
+          element={<Profile />}
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <Settings
+              theme={theme}
+              setTheme={setTheme}
+            />
+          }
+        />
+
+        <Route
+          path="/privacy-security"
+          element={<PrivacySecurity />}
+        />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* FALLBACK */}
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
     </Routes>
   )
 }
