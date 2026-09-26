@@ -5,7 +5,6 @@ scikit-learn==1.9.0
 joblib
 requests
 python-dotenv
-psycopg2-binary
 pydantic-settings
 alembic
 sqlalchemy
@@ -14,3 +13,4 @@ python-jose[cryptography]
 pydantic[email]
 python-multipart
 passlib[bcrypt]
+psycopg2-binary
