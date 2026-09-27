@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     DATABASE_URL:str
     SECRET_KEY:str
     ALGORITHM:str
+    GROQ_API_KEY:str
+    OPENWEATHER_API_KEY:str
     EXPIRE_ACCESS_TOKEN:int
     
     
