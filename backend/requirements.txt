@@ -5,3 +5,12 @@ scikit-learn==1.9.0
 joblib
 requests
 python-dotenv
+pydantic-settings
+alembic
+sqlalchemy
+pwdlib[argon2]
+python-jose[cryptography]
+pydantic[email]
+python-multipart
+passlib[bcrypt]
+psycopg[binary]
