@@ -1,8 +1,10 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.router import auth_router, user_router, seed_role, ml_router
-
 
 app = FastAPI(title=settings.APP_NAME)
 

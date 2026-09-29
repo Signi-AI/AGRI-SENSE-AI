@@ -53,12 +53,17 @@ else:
 
 # ---------------------------------------------------------------
 # Groq API (AI Advisor)
+# Jina la model linaweza kubadilishwa bila kugusa code: weka
+# GROQ_MODEL kwenye .env / Render Environment. Groq huzima models
+# za zamani mara kwa mara (mfano llama-3.3-70b-versatile ilizimwa
+# Agosti 2026), kwa hiyo usiliandike moja kwa moja ndani ya function.
 # ---------------------------------------------------------------
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "openai/gpt-oss-120b"
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+
 if GROQ_API_KEY:
-    print("Groq AI imepatikana - AI Advisor iko tayari.")
+    print(f"Groq AI imepatikana - AI Advisor iko tayari (model: {GROQ_MODEL}).")
 else:
     print("GROQ_API_KEY haijawekwa - /api/chat haitafanya kazi.")
 
@@ -66,6 +71,10 @@ MFUMO_WA_AI = """
 Wewe ni AgriSense AI - mshauri wa kilimo mwenye ujuzi kwa wakulima wa Tanzania.
 Jibu maswali kwa ufupi, kwa lugha rahisi, ukizingatia mazingira ya kilimo Afrika Mashariki.
 Kama swali halihusiani na kilimo, eleza kwa upole kuwa unaweza kusaidia tu na mada za kilimo.
+
+MUHIMU KUHUSU LUGHA: Daima jibu kwa LUGHA ILE ILE aliyotumia mtumiaji kuuliza swali.
+Kama ameuliza kwa Kiingereza, jibu kwa Kiingereza. Kama ameuliza kwa Kiswahili, jibu
+kwa Kiswahili. Usibadilishe lugha ya mtumiaji kwenda lugha nyingine kamwe.
 """
 
 
@@ -109,8 +118,7 @@ def hakiki_data_ya_model_a(data: ModelAInput):
     return makosa
 
 
-@router.get("/api/ml-status")
-def ml_status():
+def _hali_ya_ml():
     return {
         "model_A_ipo": model is not None,
         "jedwali_B_lipo": jedwali_la_viwango is not None,
@@ -118,6 +126,18 @@ def ml_status():
         "weather_ipo": OPENWEATHER_API_KEY is not None,
         "ai_advisor_ipo": GROQ_API_KEY is not None,
     }
+
+
+@router.get("/api/ml-status")
+def ml_status():
+    return _hali_ya_ml()
+
+
+# /api/health - jina la awali ambalo frontend inaweza kuwa inaliita.
+# Kama main.py tayari ina /api/health yake, futa hii moja ili zisirudie.
+@router.get("/api/health")
+def health():
+    return {"status": "sawa", **_hali_ya_ml()}
 
 
 @router.get("/api/weather")
@@ -193,9 +213,12 @@ def chat(payload: UjumbeWaChat):
     try:
         res = requests.post(
             GROQ_URL,
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
             json={
-                "model": "llama-3.3-70b-versatile",
+                "model": GROQ_MODEL,   # SI jina lililoandikwa kwa mkono - linatoka juu
                 "messages": [
                     {"role": "system", "content": MFUMO_WA_AI},
                     {"role": "user", "content": payload.ujumbe},
@@ -207,6 +230,11 @@ def chat(payload: UjumbeWaChat):
         data = res.json()
         jibu = data["choices"][0]["message"]["content"]
         return {"jibu": jibu}
+    except requests.exceptions.HTTPError as e:
+        # Groq hutuma sababu halisi kwenye body (mfano model_not_found).
+        # Tuiweke kwenye ujumbe ili tusilazimike kubahatisha tena.
+        sababu = e.response.text[:300] if e.response is not None else str(e)
+        raise HTTPException(status_code=502, detail=f"Groq imekataa ombi: {sababu}")
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=502, detail=f"Imeshindwa kupata jibu kutoka Groq: {e}")
     except (KeyError, IndexError):
