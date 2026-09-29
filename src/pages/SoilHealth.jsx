@@ -102,6 +102,61 @@ const INPUT_CONFIG = [
   },
 ]
 
+const CROP_OPTIONS = [
+  { value: 'bamia', label: 'Bamia' },
+  { value: 'kitunguu_maji', label: 'Kitunguu maji' },
+  { value: 'maharagwe', label: 'Maharagwe' },
+  { value: 'karoti', label: 'Karoti' },
+  { value: 'mihogo', label: 'Mihogo' },
+  { value: 'pilipili_hoho', label: 'Pilipili hoho' },
+  { value: 'pilipili_kali', label: 'Pilipili kali' },
+  { value: 'kitunguu_swaumu', label: 'Kitunguu swaumu' },
+  { value: 'tangawizi', label: 'Tangawizi' },
+  { value: 'mboga_za_majani', label: 'Mboga za majani' },
+  { value: 'magimbi', label: 'Magimbi' },
+  { value: 'nyanya', label: 'Nyanya' },
+  { value: 'pilipili_mbuzi', label: 'Pilipili mbuzi' },
+  { value: 'pilipili_kichaa', label: 'Pilipili kichaa' },
+  { value: 'pilipili_mwendokasi', label: 'Pilipili mwendokasi' },
+  { value: 'pilipili_manga', label: 'Pilipili manga' },
+  { value: 'mchicha', label: 'Mchicha' },
+  { value: 'chainizi', label: 'Chainizi' },
+  { value: 'sukuma_wiki', label: 'Sukuma wiki' },
+  { value: 'kisamvu', label: 'Kisamvu' },
+  { value: 'kabichi', label: 'Kabichi' },
+  { value: 'tembele', label: 'Tembele' },
+  { value: 'mnafu', label: 'Mnafu' },
+  { value: 'nyanya_chungu', label: 'Nyanya chungu' },
+  { value: 'biringanya', label: 'Biringanya' },
+  { value: 'maboga', label: 'Maboga' },
+  { value: 'limao', label: 'Limao' },
+  { value: 'kunde', label: 'Kunde' },
+
+  // English / ML crop options
+  { value: 'rice', label: 'Rice' },
+  { value: 'maize', label: 'Maize' },
+  { value: 'chickpea', label: 'Chickpea' },
+  { value: 'kidneybeans', label: 'Kidneybeans' },
+  { value: 'pigeonpeas', label: 'Pigeonpeas' },
+  { value: 'mothbeans', label: 'Mothbeans' },
+  { value: 'mungbean', label: 'Mungbean' },
+  { value: 'blackgram', label: 'Blackgram' },
+  { value: 'lentil', label: 'Lentil' },
+  { value: 'pomegranate', label: 'Pomegranate' },
+  { value: 'banana', label: 'Banana' },
+  { value: 'mango', label: 'Mango' },
+  { value: 'grapes', label: 'Grapes' },
+  { value: 'watermelon', label: 'Watermelon' },
+  { value: 'muskmelon', label: 'Muskmelon' },
+  { value: 'apple', label: 'Apple' },
+  { value: 'orange', label: 'Orange' },
+  { value: 'papaya', label: 'Papaya' },
+  { value: 'coconut', label: 'Coconut' },
+  { value: 'cotton', label: 'Cotton' },
+  { value: 'jute', label: 'Jute' },
+  { value: 'coffee', label: 'Coffee' },
+]
+
 function extractDiagnosis(data) {
   if (!data) return null
 
@@ -118,13 +173,13 @@ export function SoilHealth() {
   const { t } = useLanguage()
 
   const [soilData, setSoilData] = useState(DEFAULT_SOIL_DATA)
-  const [soilType, setSoilType] = useState('Loamy')
+  const [soilType, setSoilType] = useState('bamia')
   const [diagnosis, setDiagnosis] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const updateValue = (key, value) => {
-    setSoilData((prev) => ({
+    setSoilData(prev => ({
       ...prev,
       [key]: value,
     }))
@@ -136,7 +191,7 @@ export function SoilHealth() {
 
     if (!API_URL) {
       setError(
-        t('Api URL  is Missing') ||
+        t('Api URL is Missing') ||
           'API URL is not configured. Please set VITE_API_URL.'
       )
       return
@@ -146,10 +201,7 @@ export function SoilHealth() {
 
     if (
       values.some(
-        (value) =>
-          value === '' ||
-          value === null ||
-          value === undefined
+        value => value === '' || value === null || value === undefined
       )
     ) {
       setError(
@@ -219,164 +271,134 @@ export function SoilHealth() {
     }
   }
 
-  const renderDiagnosisValue = (value) => {
+  const renderDiagnosisValue = value => {
     if (value === null || value === undefined) {
       return null
     }
 
-    if (
-      typeof value === 'string' ||
-      typeof value === 'number'
-    ) {
+    if (typeof value === 'string' || typeof value === 'number') {
       return (
-        <p className="whitespace-pre-line text-sm leading-7 text-slate-600 dark:text-slate-300">
+        <p className="whitespace-pre-line text-sm leading-7 text-[color:var(--neu-muted)]">
           {String(value)}
         </p>
       )
     }
 
     return (
-      <pre className="overflow-x-auto whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600 dark:bg-white/[0.04] dark:text-slate-300">
+      <pre className="neu-inset overflow-x-auto whitespace-pre-wrap rounded-2xl p-4 text-sm leading-6 text-[color:var(--neu-muted)]">
         {JSON.stringify(value, null, 2)}
       </pre>
     )
   }
 
   return (
-    <section className="min-h-screen bg-[#f5f8f5] px-4 py-6 dark:bg-[#08120c] sm:px-6 lg:px-8">
+    <section className="neu-surface min-h-screen px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
 
         {/* PAGE HEADER */}
         <div className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <div className="neu-inset mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-[color:var(--neu-accent-dark)]">
               <BrainCircuit size={14} />
 
               {t('SOIL INTELLIGENCE') || 'SOIL INTELLIGENCE'}
             </div>
 
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+            <h1 className="text-2xl font-bold tracking-tight text-[color:var(--neu-text)] sm:text-3xl">
               {t('soilHealth') || 'Soil Health'}
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-              {t(' SOIL HEALTHY Desc') ||
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[color:var(--neu-muted)]">
+              {t('SOIL HEALTHY Desc') ||
                 'Enter your soil and environmental measurements for intelligent field analysis.'}
             </p>
           </div>
 
-          {/* SOIL TYPE */}
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+          {/* CROP SELECTOR */}
+          <div className="neu-raised-sm flex w-full items-center gap-3 rounded-2xl px-4 py-3 sm:w-auto">
+
+            <div className="neu-inset flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[color:var(--neu-accent)]">
               <Leaf size={18} />
             </div>
 
-            <div>
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                {t('soilType') || 'Soil Type'}
+            <div className="min-w-0 flex-1 sm:flex-none">
+              <label
+                htmlFor="crop-select"
+                className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[color:var(--neu-muted)]"
+              >
+                {t('crop') || 'Crop'}
               </label>
 
+              {/* 
+                IMPORTANT:
+                All crop options are rendered here.
+                The select is allowed to use the available width
+                so options such as Rice, Maize and Coffee remain accessible.
+              */}
               <select
+                id="crop-select"
                 value={soilType}
-                onChange={(e) => setSoilType(e.target.value)}
-                className="bg-transparent text-sm font-bold text-slate-800 outline-none dark:text-white"
+                onChange={e => setSoilType(e.target.value)}
+                className="w-full min-w-[180px] bg-transparent text-sm font-bold text-[color:var(--neu-text)] outline-none"
               >
-                <option value="Loamy">Loamy</option>
-                <option value="Sandy">Sandy</option>
-                <option value="Sandy loam">Sandy loam</option>
-                <option value="Clay">Clay</option>
-                <option value="Clay loam">Clay loam</option>
-                <option value="Silty">Silty</option>
+                {CROP_OPTIONS.map(crop => (
+                  <option
+                    key={crop.value}
+                    value={crop.value}
+                    className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white"
+                  >
+                    {crop.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
         </div>
 
         {/* EDITABLE SOIL CARDS */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {INPUT_CONFIG.map((field) => {
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {INPUT_CONFIG.map(field => {
             const Icon = field.icon
 
             return (
               <div
                 key={field.key}
-                className="
-                  group
-                  relative
-                  overflow-hidden
-                  rounded-2xl
-                  border
-                  border-emerald-800/20
-                  bg-[#0d4b2b]
-                  p-5
-                  shadow-md
-                  shadow-emerald-950/10
-                  transition-all
-                  duration-200
-                  hover:-translate-y-1
-                  hover:bg-[#0a3d23]
-                  hover:shadow-xl
-                  dark:bg-[#0b3d24]
-                "
+                className="neu-raised rounded-2xl p-4"
               >
-                {/* SOFT BACKGROUND EFFECT */}
-                <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-emerald-300/10 blur-2xl" />
+                <div className="flex items-center gap-2">
 
-                <div className="relative">
+                  <span className="neu-raised-sm grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[color:var(--neu-accent)]">
+                    <Icon size={16} />
+                  </span>
 
-                  {/* CARD HEADER */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-emerald-100">
-                      <Icon size={19} />
-                    </div>
+                  <label
+                    htmlFor={`soil-${field.key}`}
+                    className="text-xs font-bold text-[color:var(--neu-text)]"
+                  >
+                    {field.label}
+                  </label>
+                </div>
 
-                    <label
-                      htmlFor={`soil-${field.key}`}
-                      className="text-sm font-bold text-white"
-                    >
-                      {field.label}
-                    </label>
-                  </div>
+                <div className="mt-3 flex items-center gap-2">
 
-                  {/* EDITABLE VALUE */}
-                  <div className="mt-5 flex items-end gap-3">
-                    <input
-                      id={`soil-${field.key}`}
-                      type="number"
-                      inputMode="decimal"
-                      min={field.min}
-                      max={field.max}
-                      step={field.step}
-                      value={soilData[field.key]}
-                      onChange={(e) =>
-                        updateValue(
-                          field.key,
-                          e.target.value
-                        )
-                      }
-                      className="
-                        w-full
-                        min-w-0
-                        border-b-2
-                        border-white/20
-                        bg-transparent
-                        pb-2
-                        text-3xl
-                        font-bold
-                        tracking-tight
-                        text-white
-                        outline-none
-                        transition
-                        focus:border-emerald-300
-                      "
-                    />
+                  <input
+                    id={`soil-${field.key}`}
+                    type="number"
+                    inputMode="decimal"
+                    min={field.min}
+                    max={field.max}
+                    step={field.step}
+                    value={soilData[field.key]}
+                    onChange={e =>
+                      updateValue(field.key, e.target.value)
+                    }
+                    className="neu-inset neu-pressable h-10 w-full min-w-0 rounded-xl border-0 px-3 text-sm font-bold text-[color:var(--neu-text)] outline-none"
+                  />
 
-                    <span className="mb-2 shrink-0 text-xs font-bold text-emerald-200">
-                      {field.unit}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 h-px bg-white/10" />
+                  <span className="shrink-0 text-xs font-bold text-[color:var(--neu-accent-dark)]">
+                    {field.unit}
+                  </span>
                 </div>
               </div>
             )
@@ -389,45 +411,17 @@ export function SoilHealth() {
             type="button"
             onClick={runDiagnosis}
             disabled={loading}
-            className="
-              inline-flex
-              min-h-12
-              items-center
-              justify-center
-              gap-2.5
-              rounded-2xl
-              bg-[#0d4b2b]
-              px-7
-              py-3.5
-              text-sm
-              font-bold
-              text-white
-              shadow-lg
-              shadow-emerald-950/20
-              transition
-              hover:bg-[#0a3d23]
-              focus:outline-none
-              focus:ring-4
-              focus:ring-emerald-600/20
-              disabled:cursor-not-allowed
-              disabled:opacity-60
-            "
+            className="neu-raised-sm neu-pressable inline-flex min-h-12 items-center justify-center gap-2.5 rounded-2xl bg-[color:var(--neu-accent)] px-7 py-3.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
               <>
-                <Loader2
-                  size={18}
-                  className="animate-spin"
-                />
-
+                <Loader2 size={18} className="animate-spin" />
                 {t('diagnosing') || 'Analyzing Soil...'}
               </>
             ) : (
               <>
                 <BrainCircuit size={18} />
-
-                {t('runDiagnosis') ||
-                  'Run Soil Diagnosis'}
+                {t('runDiagnosis') || 'Run Soil Diagnosis'}
               </>
             )}
           </button>
@@ -435,7 +429,10 @@ export function SoilHealth() {
 
         {/* ERROR */}
         {error && (
-          <div className="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300">
+          <div
+            role="alert"
+            className="neu-inset mb-6 flex gap-3 rounded-2xl p-4 text-red-600 dark:text-red-300"
+          >
             <AlertTriangle
               size={19}
               className="mt-0.5 shrink-0"
@@ -443,8 +440,7 @@ export function SoilHealth() {
 
             <div>
               <p className="font-semibold">
-                {t('diagnosisFailed') ||
-                  'Diagnosis failed'}
+                {t('diagnosisFailed') || 'Diagnosis failed'}
               </p>
 
               <p className="mt-1 text-sm leading-6">
@@ -456,55 +452,44 @@ export function SoilHealth() {
 
         {/* AI DIAGNOSIS */}
         {diagnosis && (
-          <div className="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-sm dark:border-emerald-900/40 dark:bg-white/[0.04]">
+          <div className="neu-raised overflow-hidden rounded-3xl">
 
-            {/* RESULT HEADER */}
-            <div className="border-b border-emerald-100 bg-emerald-50/70 px-5 py-5 dark:border-emerald-900/30 dark:bg-emerald-950/20 sm:px-6">
-              <div className="flex items-center gap-3">
+            <div className="neu-inset flex items-center gap-3 px-5 py-5 sm:px-6">
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0d4b2b] text-white shadow-sm">
-                  <BrainCircuit size={21} />
-                </div>
-
-                <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white">
-                    {t('diagnosisResult') ||
-                      'AI Soil Assessment'}
-                  </h2>
-
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    {t('diagnosisCompleted') ||
-                      'Your soil measurements have been analyzed.'}
-                  </p>
-                </div>
-
-                <CheckCircle2
-                  className="ml-auto text-emerald-600 dark:text-emerald-400"
-                  size={22}
-                />
+              <div className="neu-raised-sm flex h-11 w-11 items-center justify-center rounded-2xl text-[color:var(--neu-accent)]">
+                <BrainCircuit size={21} />
               </div>
+
+              <div>
+                <h2 className="font-bold text-[color:var(--neu-text)]">
+                  {t('diagnosisResult') || 'AI Soil Assessment'}
+                </h2>
+
+                <p className="mt-1 text-xs text-[color:var(--neu-muted)]">
+                  {t('diagnosisCompleted') ||
+                    'Your soil measurements have been analyzed.'}
+                </p>
+              </div>
+
+              <CheckCircle2
+                className="ml-auto text-[color:var(--neu-accent)]"
+                size={22}
+              />
             </div>
 
-            {/* RESULT CONTENT */}
             <div className="p-5 sm:p-6">
+
               {typeof diagnosis === 'object' &&
               !Array.isArray(diagnosis) ? (
                 <div className="space-y-4">
+
                   {Object.entries(diagnosis).map(
                     ([key, value]) => (
                       <div
                         key={key}
-                        className="
-                          rounded-2xl
-                          border
-                          border-slate-100
-                          bg-slate-50/70
-                          p-4
-                          dark:border-white/10
-                          dark:bg-white/[0.025]
-                        "
+                        className="neu-inset rounded-2xl p-4"
                       >
-                        <p className="mb-2 text-sm font-bold capitalize text-slate-800 dark:text-slate-100">
+                        <p className="mb-2 text-sm font-bold capitalize text-[color:var(--neu-text)]">
                           {key.replaceAll('_', ' ')}
                         </p>
 

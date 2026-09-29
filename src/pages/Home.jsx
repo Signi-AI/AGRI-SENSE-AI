@@ -21,6 +21,7 @@ import { heroImages, contact } from '../data'
 import { Logo } from '../components/layout'
 import ThemeSelector from '../components/ThemeSelector'
 import { useLanguage } from '../i18n'
+import './Auth.jsx'
 
 export function Home({ theme, setTheme }) {
   const [index, setIndex] = useState(0)
@@ -35,8 +36,8 @@ export function Home({ theme, setTheme }) {
   }, [])
 
   return (
-    <div>
-      {/* HERO */}
+    <div className="neu-surface">
+      {/* HERO — kept photo-based for contrast; buttons get the neumorphic press feel */}
       <section className="relative min-h-[calc(100vh-72px)] overflow-hidden">
         <div className="absolute inset-0">
           {heroImages.map((img, i) => (
@@ -45,9 +46,7 @@ export function Home({ theme, setTheme }) {
               src={img.src}
               alt={img.alt}
               className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-                i === index
-                  ? 'opacity-100'
-                  : 'opacity-0'
+                i === index ? 'opacity-100' : 'opacity-0'
               }`}
             />
           ))}
@@ -55,12 +54,8 @@ export function Home({ theme, setTheme }) {
 
         <div className="absolute inset-0 bg-gradient-to-r from-[#062414]/85 via-[#0b3b20]/65 to-[#0b3b20]/20" />
 
-        {/* THEME SELECTOR */}
         <div className="absolute right-4 top-4 z-50 sm:right-6 sm:top-6">
-          <ThemeSelector
-            theme={theme}
-            setTheme={setTheme}
-          />
+          <ThemeSelector theme={theme} setTheme={setTheme} />
         </div>
 
         <div className="relative mx-auto flex min-h-[calc(100vh-72px)] max-w-7xl items-center px-5 py-20 sm:px-8">
@@ -81,7 +76,7 @@ export function Home({ theme, setTheme }) {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/auth"
-                className="btn bg-white text-forest hover:bg-green-50"
+                className="neu-pressable flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-bold text-[color:var(--neu-accent-dark)] shadow-[6px_6px_14px_rgba(0,0,0,0.25)]"
               >
                 {t('getStarted')}
                 <ArrowRight size={18} />
@@ -89,7 +84,7 @@ export function Home({ theme, setTheme }) {
 
               <a
                 href="#solution"
-                className="btn border border-white/30 bg-white/10 text-white backdrop-blur hover:bg-white/20"
+                className="neu-pressable flex items-center justify-center gap-2 rounded-2xl border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-bold text-white backdrop-blur hover:bg-white/20"
               >
                 <PlayCircle size={18} />
                 {t('watch')}
@@ -98,33 +93,16 @@ export function Home({ theme, setTheme }) {
 
             <div className="mt-12 grid max-w-2xl grid-cols-3 gap-4 border-t border-white/20 pt-6">
               <div>
-                <strong className="text-2xl sm:text-3xl">
-                  +80%
-                </strong>
-
-                <p className="mt-1 text-xs text-green-100/70">
-                  Health visibility
-                </p>
+                <strong className="text-2xl sm:text-3xl">+80%</strong>
+                <p className="mt-1 text-xs text-green-100/70">Health visibility</p>
               </div>
-
               <div>
-                <strong className="text-2xl sm:text-3xl">
-                  +60%
-                </strong>
-
-                <p className="mt-1 text-xs text-green-100/70">
-                  Better decisions
-                </p>
+                <strong className="text-2xl sm:text-3xl">+60%</strong>
+                <p className="mt-1 text-xs text-green-100/70">Better decisions</p>
               </div>
-
               <div>
-                <strong className="text-2xl sm:text-3xl">
-                  100%
-                </strong>
-
-                <p className="mt-1 text-xs text-green-100/70">
-                  Traceable workflow
-                </p>
+                <strong className="text-2xl sm:text-3xl">100%</strong>
+                <p className="mt-1 text-xs text-green-100/70">Traceable workflow</p>
               </div>
             </div>
           </div>
@@ -136,131 +114,72 @@ export function Home({ theme, setTheme }) {
               key={i}
               aria-label={`Slide ${i + 1}`}
               onClick={() => setIndex(i)}
-              className={`h-1.5 rounded-full transition-all ${
-                i === index
-                  ? 'w-8 bg-white'
-                  : 'w-2 bg-white/50'
-              }`}
+              className={`h-1.5 rounded-full transition-all ${i === index ? 'w-8 bg-white' : 'w-2 bg-white/50'}`}
             />
           ))}
         </div>
       </section>
 
       {/* ABOUT */}
-      <section
-        id="about"
-        className="section-space"
-      >
+      <section id="about" className="section-space">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:items-center">
           <div>
-            <p className="section-kicker">
-              {t('about')}
-            </p>
-
-            <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-              {t('aboutTitle')}
-            </h2>
-
-            <p className="mt-5 text-base leading-8 text-slate-500">
-              {t('aboutText')}
-            </p>
+            <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]">{t('about')}</p>
+            <h2 className="text-4xl font-extrabold tracking-tight text-[color:var(--neu-text)] sm:text-5xl">{t('aboutTitle')}</h2>
+            <p className="mt-5 text-base leading-8 text-[color:var(--neu-muted)]">{t('aboutText')}</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="card p-6">
-              <Sprout className="text-leaf" />
-
-              <h3 className="mt-5 font-extrabold">
-                {t('offer')}
-              </h3>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                AI-powered farm intelligence and recommendations.
-              </p>
+            <div className="neu-raised rounded-2xl p-6">
+              <span className="neu-raised-sm grid h-11 w-11 place-items-center rounded-xl text-[color:var(--neu-accent)]"><Sprout size={19} /></span>
+              <h3 className="mt-5 font-extrabold text-[color:var(--neu-text)]">{t('offer')}</h3>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--neu-muted)]">AI-powered farm intelligence and recommendations.</p>
             </div>
 
-            <div className="card p-6">
-              <Cpu className="text-leaf" />
-
-              <h3 className="mt-5 font-extrabold">
-                {t('serve')}
-              </h3>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Farmers, cooperatives and agriculture teams.
-              </p>
+            <div className="neu-raised rounded-2xl p-6">
+              <span className="neu-raised-sm grid h-11 w-11 place-items-center rounded-xl text-[color:var(--neu-accent)]"><Cpu size={19} /></span>
+              <h3 className="mt-5 font-extrabold text-[color:var(--neu-text)]">{t('serve')}</h3>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--neu-muted)]">Farmers, cooperatives and agriculture teams.</p>
             </div>
 
-            <div className="card p-6 sm:col-span-2">
-              <ShieldCheck className="text-leaf" />
-
-              <h3 className="mt-5 font-extrabold">
-                {t('solution')}
-              </h3>
-
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                A clear workflow for sensor readings, AI analysis and practical farm action.
-              </p>
+            <div className="neu-raised rounded-2xl p-6 sm:col-span-2">
+              <span className="neu-raised-sm grid h-11 w-11 place-items-center rounded-xl text-[color:var(--neu-accent)]"><ShieldCheck size={19} /></span>
+              <h3 className="mt-5 font-extrabold text-[color:var(--neu-text)]">{t('solution')}</h3>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--neu-muted)]">A clear workflow for sensor readings, AI analysis and practical farm action.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SOLUTION */}
-      <section
-        id="solution"
-        className="section-space bg-slate-50 dark:bg-[#0e1c13]"
-      >
+      {/* SOLUTION — recessed band so the step cards read as "popping out" of it */}
+      <section id="solution" className="section-space">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <div className="max-w-2xl">
-            <p className="section-kicker">
-              {t('solution')}
-            </p>
+          <div className="neu-inset rounded-[2.5rem] p-6 sm:p-10">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]">{t('solution')}</p>
+              <h2 className="text-4xl font-extrabold text-[color:var(--neu-text)]">{t('solutionTitle')}</h2>
+              <p className="mt-4 leading-7 text-[color:var(--neu-muted)]">{t('solutionText')}</p>
+            </div>
 
-            <h2 className="text-4xl font-extrabold">
-              {t('solutionTitle')}
-            </h2>
-
-            <p className="mt-4 leading-7 text-slate-500">
-              {t('solutionText')}
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-4">
-            {[
-              [Tractor, 'Multi-sensor IoT'],
-              [Wheat, 'Soil intelligence'],
-              [Cpu, 'AI analysis'],
-              [Leaf, 'Farm action'],
-            ].map(([I, label], i) => (
-              <div
-                key={label}
-                className="card p-5"
-              >
-                <div className="flex items-center justify-between">
-                  <I className="text-leaf" />
-
-                  <span className="text-xs font-black text-slate-300">
-                    0{i + 1}
-                  </span>
+            <div className="mt-10 grid gap-4 md:grid-cols-4">
+              {[
+                [Tractor, 'Multi-sensor IoT'],
+                [Wheat, 'Soil intelligence'],
+                [Cpu, 'AI analysis'],
+                [Leaf, 'Farm action'],
+              ].map(([I, label], i) => (
+                <div key={label} className="neu-raised rounded-2xl p-5">
+                  <div className="flex items-center justify-between">
+                    <I className="text-[color:var(--neu-accent)]" />
+                    <span className="text-xs font-black text-[color:var(--neu-muted)]">0{i + 1}</span>
+                  </div>
+                  <h3 className="mt-8 font-extrabold text-[color:var(--neu-text)]">{label}</h3>
+                  <p className="mt-2 text-sm text-[color:var(--neu-muted)]">
+                    {['Collect readings', 'Understand soil', 'Generate insights', 'Act with confidence'][i]}
+                  </p>
                 </div>
-
-                <h3 className="mt-8 font-extrabold">
-                  {label}
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  {
-                    [
-                      'Collect readings',
-                      'Understand soil',
-                      'Generate insights',
-                      'Act with confidence',
-                    ][i]
-                  }
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -268,41 +187,18 @@ export function Home({ theme, setTheme }) {
       {/* IMPACT */}
       <section className="section-space">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <p className="section-kicker">
-            {t('impact')}
-          </p>
+          <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]">{t('impact')}</p>
 
           <div className="mt-5 grid gap-5 md:grid-cols-3">
             {[
-              [
-                Sprout,
-                t('productivity'),
-                t('productivityText'),
-              ],
-              [
-                Leaf,
-                t('sustainability'),
-                t('sustainabilityText'),
-              ],
-              [
-                Wheat,
-                t('food'),
-                t('foodText'),
-              ],
+              [Sprout, t('productivity'), t('productivityText')],
+              [Leaf, t('sustainability'), t('sustainabilityText')],
+              [Wheat, t('food'), t('foodText')],
             ].map(([I, title, desc]) => (
-              <div
-                key={title}
-                className="card p-7"
-              >
-                <I className="text-leaf" />
-
-                <h3 className="mt-6 text-xl font-extrabold">
-                  {title}
-                </h3>
-
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {desc}
-                </p>
+              <div key={title} className="neu-raised rounded-2xl p-7">
+                <span className="neu-raised-sm grid h-11 w-11 place-items-center rounded-xl text-[color:var(--neu-accent)]"><I size={19} /></span>
+                <h3 className="mt-6 text-xl font-extrabold text-[color:var(--neu-text)]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--neu-muted)]">{desc}</p>
               </div>
             ))}
           </div>
@@ -310,21 +206,16 @@ export function Home({ theme, setTheme }) {
       </section>
 
       {/* CTA */}
-      <section className="bg-forest py-16 text-white">
+      <section className="py-16 text-white" style={{ background: 'linear-gradient(135deg, var(--neu-accent-dark), var(--neu-accent))' }}>
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 sm:px-8 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-bold text-lime-300">
-              {t('ready')}
-            </p>
-
-            <h2 className="mt-2 text-3xl font-extrabold sm:text-4xl">
-              {t('readyTitle')}
-            </h2>
+            <p className="text-sm font-bold text-lime-200">{t('ready')}</p>
+            <h2 className="mt-2 text-3xl font-extrabold sm:text-4xl">{t('readyTitle')}</h2>
           </div>
 
           <Link
             to="/auth"
-            className="btn bg-white text-forest"
+            className="neu-pressable flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-bold text-[color:var(--neu-accent-dark)] shadow-[6px_6px_14px_rgba(0,0,0,0.2)]"
           >
             {t('create')}
             <ArrowRight size={18} />
@@ -333,37 +224,25 @@ export function Home({ theme, setTheme }) {
       </section>
 
       {/* CONTACT / FOOTER */}
-      <footer
-        id="contact"
-        className="border-t border-slate-200 bg-white py-12 dark:border-white/10 dark:bg-slate-950"
-      >
+      <footer id="contact" className="neu-surface border-t border-[color:var(--neu-dark)] py-12">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 md:grid-cols-3">
           <div>
             <Logo />
-
-            <p className="mt-4 max-w-sm text-sm leading-6 text-slate-500">
+            <p className="mt-4 max-w-sm text-sm leading-6 text-[color:var(--neu-muted)]">
               AI-powered precision agriculture and soil health monitoring.
             </p>
           </div>
 
           <div>
-            <p className="mb-4 text-xs font-extrabold uppercase tracking-widest text-slate-400">
-              {t('contact')}
-            </p>
+            <p className="mb-4 text-xs font-extrabold uppercase tracking-widest text-[color:var(--neu-muted)]">{t('contact')}</p>
 
-            <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300">
-              <a
-                href={`mailto:${contact.email}`}
-                className="flex items-center gap-2 hover:text-leaf"
-              >
+            <div className="space-y-3 text-sm text-[color:var(--neu-text)]">
+              <a href={`mailto:${contact.email}`} className="flex items-center gap-2 hover:text-[color:var(--neu-accent-dark)]">
                 <Mail size={16} />
                 {contact.email}
               </a>
 
-              <a
-                href={`tel:${contact.phone}`}
-                className="flex items-center gap-2 hover:text-leaf"
-              >
+              <a href={`tel:${contact.phone}`} className="flex items-center gap-2 hover:text-[color:var(--neu-accent-dark)]">
                 <Phone size={16} />
                 {contact.phone}
               </a>
@@ -371,54 +250,31 @@ export function Home({ theme, setTheme }) {
           </div>
 
           <div>
-            <p className="mb-4 text-xs font-extrabold uppercase tracking-widest text-slate-400">
-              Social
-            </p>
+            <p className="mb-4 text-xs font-extrabold uppercase tracking-widest text-[color:var(--neu-muted)]">Social</p>
 
             <div className="flex gap-2">
-              <a
-                href={contact.youtube}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border p-3 hover:bg-slate-50 dark:border-white/10"
-              >
+              <a href={contact.youtube} target="_blank" rel="noreferrer" className="neu-raised-sm neu-pressable rounded-xl p-3 text-[color:var(--neu-text)]">
                 <Youtube size={18} />
               </a>
-
-              <a
-                href={contact.facebook}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border p-3 hover:bg-slate-50 dark:border-white/10"
-              >
+              <a href={contact.facebook} target="_blank" rel="noreferrer" className="neu-raised-sm neu-pressable rounded-xl p-3 text-[color:var(--neu-text)]">
                 <Facebook size={18} />
               </a>
-
-              <a
-                href={contact.twitter}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border p-3 hover:bg-slate-50 dark:border-white/10"
-              >
+              <a href={contact.twitter} target="_blank" rel="noreferrer" className="neu-raised-sm neu-pressable rounded-xl p-3 text-[color:var(--neu-text)]">
                 <Twitter size={18} />
               </a>
-
-              <a
-                href={contact.instagram}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-xl border p-3 hover:bg-slate-50 dark:border-white/10"
-              >
+              <a href={contact.instagram} target="_blank" rel="noreferrer" className="neu-raised-sm neu-pressable rounded-xl p-3 text-[color:var(--neu-text)]">
                 <Instagram size={18} />
               </a>
             </div>
           </div>
         </div>
 
-        <div className="mx-auto mt-10 max-w-7xl border-t border-slate-200 px-5 pt-6 text-xs text-slate-400 dark:border-white/10 sm:px-8">
+        <div className="mx-auto mt-10 max-w-7xl border-t border-[color:var(--neu-dark)] px-5 pt-6 text-xs text-[color:var(--neu-muted)] sm:px-8">
           © {new Date().getFullYear()} AgriSense AI. All rights reserved.
         </div>
       </footer>
     </div>
   )
 }
+
+export default Home

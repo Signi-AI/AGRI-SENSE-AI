@@ -6,6 +6,7 @@ import {
   CloudRain,
 } from 'lucide-react'
 import { useLanguage } from '../i18n'
+import './Auth.jsx'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -90,18 +91,18 @@ export function CropRecommendation() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-7 sm:px-8">
+    <main className="neu-surface mx-auto max-w-5xl px-4 py-7 sm:px-8">
       {/* HEADER */}
       <div>
-        <p className="section-kicker">
+        <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]">
           {t('aiCropIntelligence')}
         </p>
 
-        <h1 className="text-3xl font-extrabold sm:text-4xl">
+        <h1 className="text-3xl font-extrabold text-[color:var(--neu-text)] sm:text-4xl">
           {t('crop')}
         </h1>
 
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-sm text-[color:var(--neu-muted)]">
           {t('cropDesc')}
         </p>
       </div>
@@ -109,14 +110,14 @@ export function CropRecommendation() {
       {/* INPUT FORM */}
       <form
         onSubmit={submit}
-        className="card mt-8 p-5 sm:p-6"
+        className="neu-raised mt-8 rounded-3xl p-5 sm:p-6"
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {fields.map(([key, label, value]) => (
             <div key={key}>
               <label
                 htmlFor={key}
-                className="label"
+                className="mb-2 block text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]"
               >
                 {t(key) || label}
               </label>
@@ -125,7 +126,7 @@ export function CropRecommendation() {
                 {key === 'rainfall' && (
                   <CloudRain
                     size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--neu-muted)]"
                   />
                 )}
 
@@ -137,10 +138,8 @@ export function CropRecommendation() {
                   step="any"
                   min="0"
                   required
-                  className={`input ${
-                    key === 'rainfall'
-                      ? 'pl-10'
-                      : ''
+                  className={`neu-inset neu-pressable h-12 w-full rounded-2xl border-0 px-4 text-sm font-medium text-[color:var(--neu-text)] outline-none ${
+                    key === 'rainfall' ? 'pl-10' : ''
                   }`}
                   placeholder={label}
                 />
@@ -153,7 +152,7 @@ export function CropRecommendation() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0d4b2b] px-5 py-3 text-sm font-bold text-white shadow-md shadow-emerald-950/20 transition hover:bg-[#0a3d23] focus:outline-none focus:ring-4 focus:ring-emerald-600/20 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="neu-raised-sm neu-pressable mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[color:var(--neu-accent)] px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {loading ? (
             <>
@@ -175,28 +174,28 @@ export function CropRecommendation() {
 
       {/* ERROR */}
       {error && (
-        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-400">
+        <div role="alert" className="neu-inset mt-4 rounded-2xl px-4 py-3 text-sm text-red-600 dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* RESULT */}
       {result && (
-        <section className="mt-6 rounded-3xl bg-mint p-6 dark:bg-green-950/30">
+        <section className="neu-raised mt-6 rounded-3xl p-6">
           <div className="flex gap-4">
             {/* ICON */}
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-leaf dark:bg-slate-800">
+            <span className="neu-raised-sm grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-[color:var(--neu-accent)]">
               <BrainCircuit size={23} />
             </span>
 
             <div className="min-w-0 flex-1">
               {/* RESULT LABEL */}
-              <p className="section-kicker">
+              <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]">
                 {t('recommendationResult')}
               </p>
 
               {/* TOP CROP */}
-              <h2 className="text-2xl font-extrabold capitalize">
+              <h2 className="text-2xl font-extrabold capitalize text-[color:var(--neu-text)]">
                 {result.zao} —{' '}
                 {Math.round(
                   result.top3[0].uwezekano * 100
@@ -205,7 +204,7 @@ export function CropRecommendation() {
               </h2>
 
               {/* INSIGHT */}
-              <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+              <p className="mt-2 text-sm leading-7 text-[color:var(--neu-muted)]">
                 {t('recommendationInsight')}
               </p>
 
@@ -214,17 +213,17 @@ export function CropRecommendation() {
                 {result.top3.map((item, i) => (
                   <div
                     key={`${item.zao}-${i}`}
-                    className="rounded-2xl bg-white p-3 text-center dark:bg-slate-800"
+                    className="neu-inset rounded-2xl p-3 text-center"
                   >
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-[color:var(--neu-muted)]">
                       #{i + 1}
                     </p>
 
-                    <p className="font-bold capitalize">
+                    <p className="font-bold capitalize text-[color:var(--neu-text)]">
                       {item.zao}
                     </p>
 
-                    <p className="text-sm font-bold text-leaf">
+                    <p className="text-sm font-bold text-[color:var(--neu-accent-dark)]">
                       {Math.round(
                         item.uwezekano * 100
                       )}
