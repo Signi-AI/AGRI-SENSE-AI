@@ -21,8 +21,9 @@ import {
 } from 'firebase/auth'
 import { auth } from '../firebase'
 
-/* =====================================================================
-   NEUMORPHIC GREEN STYLES
+// =====================================================================
+// NEUMORPHIC GREEN STYLES
+// =====================================================================
 
 const neuCss = `
 @layer components {
@@ -143,8 +144,9 @@ if (typeof document !== 'undefined') {
   styleEl.textContent = neuCss
 }
 
-/* =====================================================================
-   GOOGLE ICON
+// =====================================================================
+// GOOGLE ICON
+// =====================================================================
 
 function GoogleIcon() {
   return (
@@ -176,8 +178,9 @@ function GoogleIcon() {
   )
 }
 
-/* =====================================================================
-   FORM STYLES
+// =====================================================================
+// FORM STYLES
+// =====================================================================
 
 const FIELD =
   'neu-inset neu-pressable h-14 w-full rounded-2xl border-0 pl-11 pr-4 text-sm font-medium outline-none text-[color:var(--neu-text)] placeholder:text-[color:var(--neu-muted)]'
@@ -185,8 +188,9 @@ const FIELD =
 const LABEL =
   'mb-2 block text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]'
 
-/* =====================================================================
-   CURRENT USER HELPERS
+// =====================================================================
+// CURRENT USER HELPERS
+// =====================================================================
 
 export function getCurrentUser() {
   try {
@@ -205,17 +209,15 @@ export function getCurrentUser() {
       provider: parsedUser.provider || 'password',
     }
   } catch (error) {
-    console.error(
-      'Unable to read current user:',
-      error
-    )
+    console.error('Unable to read current user:', error)
 
     return null
   }
 }
 
-/* =====================================================================
-   SAVE USER NAME
+// =====================================================================
+// SAVE USER NAME
+// =====================================================================
 
 export function saveUserName(name) {
   const cleanName = String(name || '').trim()
@@ -236,26 +238,15 @@ export function saveUserName(name) {
       name: cleanName,
     }
 
-    localStorage.setItem(
-      'agrisense-user',
-      JSON.stringify(updatedUser)
-    )
-
-    localStorage.setItem(
-      'agrisense-user-name',
-      cleanName
-    )
+    localStorage.setItem('agrisense-user', JSON.stringify(updatedUser))
+    localStorage.setItem('agrisense-user-name', cleanName)
 
     if (currentUser.provider === 'google.com') {
-      const googleUser =
-        localStorage.getItem(
-          'agrisense-google-user'
-        )
+      const googleUser = localStorage.getItem('agrisense-google-user')
 
       if (googleUser) {
         try {
-          const parsedGoogleUser =
-            JSON.parse(googleUser)
+          const parsedGoogleUser = JSON.parse(googleUser)
 
           localStorage.setItem(
             'agrisense-google-user',
@@ -265,33 +256,24 @@ export function saveUserName(name) {
             })
           )
         } catch (error) {
-          console.error(
-            'Unable to update Google user:',
-            error
-          )
+          console.error('Unable to update Google user:', error)
         }
       }
     }
 
     return true
   } catch (error) {
-    console.error(
-      'Unable to save username:',
-      error
-    )
+    console.error('Unable to save username:', error)
 
     return false
   }
 }
 
-/* =====================================================================
-   CHANGE USER PASSWORD
-   Frontend demo only.
+// =====================================================================
+// CHANGE USER PASSWORD (Frontend demo only)
+// =====================================================================
 
-export function changeUserPassword(
-  currentPassword,
-  newPassword
-) {
+export function changeUserPassword(currentPassword, newPassword) {
   const currentUser = getCurrentUser()
 
   if (!currentUser) {
@@ -304,59 +286,44 @@ export function changeUserPassword(
   if (currentUser.provider === 'google.com') {
     return {
       success: false,
-      message:
-        'Google accounts manage passwords through Google.',
+      message: 'Google accounts manage passwords through Google.',
     }
   }
 
   if (!newPassword || newPassword.length < 6) {
     return {
       success: false,
-      message:
-        'New password must be at least 6 characters.',
+      message: 'New password must be at least 6 characters.',
     }
   }
 
-  const savedPassword = localStorage.getItem(
-    'agrisense-user-password'
-  )
+  const savedPassword = localStorage.getItem('agrisense-user-password')
 
-  if (
-    savedPassword &&
-    savedPassword !== currentPassword
-  ) {
+  if (savedPassword && savedPassword !== currentPassword) {
     return {
       success: false,
-      message:
-        'Current password is incorrect.',
+      message: 'Current password is incorrect.',
     }
   }
 
-  localStorage.setItem(
-    'agrisense-user-password',
-    newPassword
-  )
+  localStorage.setItem('agrisense-user-password', newPassword)
 
   return {
     success: true,
-    message:
-      'Password updated successfully.',
+    message: 'Password updated successfully.',
   }
 }
 
-/* =====================================================================
-   AUTH COMPONENT
+// =====================================================================
+// AUTH COMPONENT
+// =====================================================================
 
 export function Auth() {
   const [mode, setMode] = useState('login')
-  const [showPassword, setShowPassword] =
-    useState(false)
-  const [showConfirm, setShowConfirm] =
-    useState(false)
-  const [googleLoading, setGoogleLoading] =
-    useState(false)
-  const [submitting, setSubmitting] =
-    useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
@@ -371,16 +338,15 @@ export function Auth() {
   const navigate = useNavigate()
   const { t } = useLanguage()
 
-  const forgot =
-    params.get('forgot') === 'true'
+  const forgot = params.get('forgot') === 'true'
 
-  const field = key => e =>
-    setForm(f => ({
+  const field = (key) => (e) =>
+    setForm((f) => ({
       ...f,
       [key]: e.target.value,
     }))
 
-  const switchMode = next => {
+  const switchMode = (next) => {
     setMode(next)
     setError('')
 
@@ -393,82 +359,45 @@ export function Auth() {
     })
   }
 
-  const submit = e => {
+  const submit = (e) => {
     e.preventDefault()
     setError('')
 
-    if (
-      mode === 'register' &&
-      form.password !== form.confirm
-    ) {
-      setError(
-        'Passwords do not match. Please re-enter them.'
-      )
-
+    if (mode === 'register' && form.password !== form.confirm) {
+      setError('Passwords do not match. Please re-enter them.')
       return
     }
 
     if (form.password.length < 6) {
-      setError(
-        'Password must be at least 6 characters.'
-      )
-
+      setError('Password must be at least 6 characters.')
       return
     }
 
     setSubmitting(true)
 
-    const firstName =
-      form.firstName.trim()
+    const firstName = form.firstName.trim()
+    const lastName = form.lastName.trim()
+    const email = form.email.trim()
 
-    const lastName =
-      form.lastName.trim()
-
-    const email =
-      form.email.trim()
-
-    /*
-      First name becomes the account display name.
-    */
-    const accountName =
-      firstName ||
-      email.split('@')[0] ||
-      'User'
+    // First name becomes the account display name.
+    const accountName = firstName || email.split('@')[0] || 'User'
 
     const accountUser = {
       name: accountName,
-      fullName:
-        `${firstName} ${lastName}`.trim(),
+      fullName: `${firstName} ${lastName}`.trim(),
       firstName,
       lastName,
       email,
       provider: 'password',
     }
 
-    localStorage.setItem(
-      'agrisense-auth',
-      'true'
-    )
+    localStorage.setItem('agrisense-auth', 'true')
+    localStorage.setItem('agrisense-user', JSON.stringify(accountUser))
+    localStorage.setItem('agrisense-user-name', accountName)
 
-    localStorage.setItem(
-      'agrisense-user',
-      JSON.stringify(accountUser)
-    )
-
-    localStorage.setItem(
-      'agrisense-user-name',
-      accountName
-    )
-
-    /*
-      Frontend demo password.
-      Replace with Firebase/backend authentication
-      before production.
-    */
-    localStorage.setItem(
-      'agrisense-user-password',
-      form.password
-    )
+    // Frontend demo password. Replace with Firebase/backend
+    // authentication before production.
+    localStorage.setItem('agrisense-user-password', form.password)
 
     setSubmitting(false)
 
@@ -480,8 +409,7 @@ export function Auth() {
       setError('')
       setGoogleLoading(true)
 
-      const provider =
-        new GoogleAuthProvider()
+      const provider = new GoogleAuthProvider()
 
       provider.setCustomParameters({
         prompt: 'select_account',
@@ -490,21 +418,14 @@ export function Auth() {
       provider.addScope('profile')
       provider.addScope('email')
 
-      const result =
-        await signInWithPopup(
-          auth,
-          provider
-        )
+      const result = await signInWithPopup(auth, provider)
 
       const user = result.user
 
-      const googleFullName =
-        user.displayName || ''
+      const googleFullName = user.displayName || ''
 
       const googleFirstName =
-        googleFullName
-          .trim()
-          .split(/\s+/)[0] ||
+        googleFullName.trim().split(/\s+/)[0] ||
         user.email?.split('@')[0] ||
         'User'
 
@@ -515,41 +436,21 @@ export function Auth() {
         firstName: googleFirstName,
         email: user.email || '',
         photo: user.photoURL || '',
-        emailVerified:
-          Boolean(user.emailVerified),
+        emailVerified: Boolean(user.emailVerified),
         provider: 'google.com',
       }
 
-      localStorage.setItem(
-        'agrisense-auth',
-        'true'
-      )
-
-      localStorage.setItem(
-        'agrisense-user',
-        JSON.stringify(googleUser)
-      )
-
-      localStorage.setItem(
-        'agrisense-google-user',
-        JSON.stringify(googleUser)
-      )
-
-      localStorage.setItem(
-        'agrisense-user-name',
-        googleFirstName
-      )
+      localStorage.setItem('agrisense-auth', 'true')
+      localStorage.setItem('agrisense-user', JSON.stringify(googleUser))
+      localStorage.setItem('agrisense-google-user', JSON.stringify(googleUser))
+      localStorage.setItem('agrisense-user-name', googleFirstName)
 
       navigate('/dashboard')
     } catch (err) {
-      console.error(
-        'Google Sign-In Error:',
-        err
-      )
+      console.error('Google Sign-In Error:', err)
 
       let message =
-        err?.message ||
-        'Unable to sign in with Google. Please try again.'
+        err?.message || 'Unable to sign in with Google. Please try again.'
 
       switch (err?.code) {
         case 'auth/popup-closed-by-user':
@@ -578,8 +479,7 @@ export function Auth() {
           break
 
         case 'auth/operation-not-allowed':
-          message =
-            'Google Sign-In is not enabled in Firebase Authentication.'
+          message = 'Google Sign-In is not enabled in Firebase Authentication.'
           break
 
         case 'auth/network-request-failed':
@@ -599,25 +499,17 @@ export function Auth() {
 
   return (
     <main className="neu-surface relative min-h-[calc(100vh-72px)] overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-
       <div className="relative mx-auto flex min-h-[calc(100vh-136px)] max-w-6xl items-center justify-center">
-
         <div className="neu-raised grid w-full overflow-hidden rounded-[32px] lg:grid-cols-[0.95fr_1.05fr]">
-
           {/* LEFT BRAND PANEL */}
-
           <section className="relative hidden flex-col justify-between p-10 lg:flex lg:min-h-[720px] xl:p-14">
-
             <div>
-
               <div className="flex items-center gap-3">
-
                 <div className="neu-raised-sm grid h-12 w-12 place-items-center rounded-2xl text-[color:var(--neu-accent)]">
                   <Leaf className="h-6 w-6" />
                 </div>
 
                 <div>
-
                   <div className="text-lg font-extrabold tracking-tight text-[color:var(--neu-text)]">
                     AgriSense AI
                   </div>
@@ -625,14 +517,10 @@ export function Auth() {
                   <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--neu-muted)]">
                     Precision Agriculture
                   </div>
-
                 </div>
-
               </div>
 
-
               <div className="mt-24 max-w-md">
-
                 <h1 className="text-5xl font-black leading-[1.05] tracking-tight text-[color:var(--neu-text)] xl:text-6xl">
                   Grow smarter.
                   <br />
@@ -646,18 +534,12 @@ export function Auth() {
                 </p>
 
                 <div className="mt-9 space-y-4">
-
                   {[
                     'Smart farm monitoring',
                     'AI-powered recommendations',
                     'Data-driven agriculture',
-                  ].map(f => (
-
-                    <div
-                      key={f}
-                      className="flex items-center gap-3"
-                    >
-
+                  ].map((f) => (
+                    <div key={f} className="flex items-center gap-3">
                       <div className="neu-raised-sm grid h-9 w-9 place-items-center rounded-xl text-[color:var(--neu-accent)]">
                         <CheckCircle2 size={17} />
                       </div>
@@ -665,46 +547,30 @@ export function Auth() {
                       <span className="text-sm text-[color:var(--neu-text)]">
                         {f}
                       </span>
-
                     </div>
-
                   ))}
-
                 </div>
-
               </div>
-
             </div>
 
-
             <div className="flex items-center justify-between pt-6 text-[color:var(--neu-muted)]">
-
-              <p className="text-xs">
-                Smart Farming. Better Harvests.
-              </p>
+              <p className="text-xs">Smart Farming. Better Harvests.</p>
 
               <div className="flex items-center gap-2 text-xs">
                 <ShieldCheck size={14} />
                 Secure access
               </div>
-
             </div>
-
           </section>
 
-
           {/* RIGHT AUTH PANEL */}
-
           <section className="relative flex min-h-[680px] flex-col justify-center p-6 sm:p-10 lg:p-12 xl:p-14">
-
             <div className="mb-8 flex items-center gap-3 lg:hidden">
-
               <div className="neu-raised-sm grid h-11 w-11 place-items-center rounded-2xl text-[color:var(--neu-accent)]">
                 <Leaf size={22} />
               </div>
 
               <div>
-
                 <div className="font-extrabold text-[color:var(--neu-text)]">
                   AgriSense AI
                 </div>
@@ -712,60 +578,41 @@ export function Auth() {
                 <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-[color:var(--neu-muted)]">
                   Precision Agriculture
                 </div>
-
               </div>
-
             </div>
 
-
             {!forgot && (
-
               <div className="neu-inset mb-8 rounded-2xl p-1.5">
-
                 <div className="grid grid-cols-2 gap-1">
-
                   <button
                     type="button"
-                    onClick={() =>
-                      switchMode('login')
-                    }
+                    onClick={() => switchMode('login')}
                     className={`rounded-xl px-4 py-3 text-sm font-bold transition-all duration-300 ${
                       mode === 'login'
                         ? 'neu-tab-active'
                         : 'text-[color:var(--neu-muted)] hover:text-[color:var(--neu-text)]'
                     }`}
                   >
-                    {t('login') ||
-                      'Login'}
+                    {t('login') || 'Login'}
                   </button>
-
 
                   <button
                     type="button"
-                    onClick={() =>
-                      switchMode('register')
-                    }
+                    onClick={() => switchMode('register')}
                     className={`rounded-xl px-4 py-3 text-sm font-bold transition-all duration-300 ${
                       mode === 'register'
                         ? 'neu-tab-active'
                         : 'text-[color:var(--neu-muted)] hover:text-[color:var(--neu-text)]'
                     }`}
                   >
-                    {t('create') ||
-                      'Create account'}
+                    {t('create') || 'Create account'}
                   </button>
-
                 </div>
-
               </div>
-
             )}
 
-
             <div className="mb-7">
-
               <div className="neu-raised-sm mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl text-[color:var(--neu-accent)]">
-
                 {forgot ? (
                   <Mail size={19} />
                 ) : mode === 'login' ? (
@@ -773,24 +620,17 @@ export function Auth() {
                 ) : (
                   <UserRound size={19} />
                 )}
-
               </div>
 
-
               <h2 className="text-3xl font-black tracking-tight text-[color:var(--neu-text)] sm:text-4xl">
-
                 {forgot
                   ? 'Reset your password'
                   : mode === 'login'
-                    ? t('welcome') ||
-                      'Welcome back'
+                    ? t('welcome') || 'Welcome back'
                     : 'Create your account'}
-
               </h2>
 
-
               <p className="mt-2 max-w-md text-sm leading-6 text-[color:var(--neu-muted)]">
-
                 {forgot
                   ? 'Enter your email and we will send you a password reset link.'
                   : mode === 'login'
@@ -798,58 +638,35 @@ export function Auth() {
                       'Sign in to continue to your AgriSense AI workspace.'
                     : t('startProfile') ||
                       'Create your account and start making smarter farming decisions.'}
-
               </p>
-
             </div>
 
-
             {error && (
-
               <div
                 role="alert"
                 className="neu-inset mb-5 flex gap-3 rounded-2xl p-4 text-red-600 dark:text-red-300"
               >
+                <AlertCircle size={18} className="mt-0.5 shrink-0" />
 
-                <AlertCircle
-                  size={18}
-                  className="mt-0.5 shrink-0"
-                />
-
-                <p className="text-sm leading-6">
-                  {error}
-                </p>
-
+                <p className="text-sm leading-6">{error}</p>
               </div>
-
             )}
 
-
-            {forgot  ? (
-
+            {forgot ? (
               <form
-                onSubmit={e => {
+                onSubmit={(e) => {
                   e.preventDefault()
 
-                  alert(
-                    'link_output: reset link would be sent by the backend.'
-                  )
+                  alert('link_output: reset link would be sent by the backend.')
                 }}
                 className="space-y-5"
               >
-
                 <div>
-
-                  <label
-                    htmlFor="reset-email"
-                    className={LABEL}
-                  >
-                    {t('email') ||
-                      'Email address'}
+                  <label htmlFor="reset-email" className={LABEL}>
+                    {t('email') || 'Email address'}
                   </label>
 
                   <div className="relative">
-
                     <Mail
                       className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--neu-muted)]"
                       size={18}
@@ -862,26 +679,19 @@ export function Auth() {
                       className={FIELD}
                       placeholder="you@example.com"
                     />
-
                   </div>
-
                 </div>
-
 
                 <button
                   type="submit"
                   className="neu-raised-sm neu-pressable group flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[color:var(--neu-accent)] px-5 text-sm font-bold text-white"
                 >
-
                   Send Reset Link
-
                   <ArrowRight
                     size={17}
                     className="transition-transform group-hover:translate-x-1"
                   />
-
                 </button>
-
 
                 <Link
                   to="/auth"
@@ -889,34 +699,18 @@ export function Auth() {
                 >
                   ← Back to Login
                 </Link>
-
               </form>
-
             ) : (
-
               <>
-
-                <form
-                  onSubmit={submit}
-                  className="space-y-4"
-                >
-
+                <form onSubmit={submit} className="space-y-4">
                   {mode === 'register' && (
-
                     <div className="grid gap-4 sm:grid-cols-2">
-
                       <div>
-
-                        <label
-                          htmlFor="firstName"
-                          className={LABEL}
-                        >
-                          {t('firstName') ||
-                            'First name'}
+                        <label htmlFor="firstName" className={LABEL}>
+                          {t('firstName') || 'First name'}
                         </label>
 
                         <div className="relative">
-
                           <UserRound
                             className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--neu-muted)]"
                             size={17}
@@ -926,64 +720,36 @@ export function Auth() {
                             id="firstName"
                             required
                             value={form.firstName}
-                            onChange={field(
-                              'firstName'
-                            )}
+                            onChange={field('firstName')}
                             className={FIELD}
-                            placeholder={
-                              t('firstName') ||
-                              'First name'
-                            }
+                            placeholder={t('firstName') || 'First name'}
                           />
-
                         </div>
-
                       </div>
 
-
                       <div>
-
-                        <label
-                          htmlFor="lastName"
-                          className={LABEL}
-                        >
-                          {t('lastName') ||
-                            'Last name'}
+                        <label htmlFor="lastName" className={LABEL}>
+                          {t('lastName') || 'Last name'}
                         </label>
 
                         <input
                           id="lastName"
                           required
                           value={form.lastName}
-                          onChange={field(
-                            'lastName'
-                          )}
+                          onChange={field('lastName')}
                           className="neu-inset neu-pressable h-14 w-full rounded-2xl border-0 px-4 text-sm font-medium outline-none text-[color:var(--neu-text)] placeholder:text-[color:var(--neu-muted)]"
-                          placeholder={
-                            t('lastName') ||
-                            'Last name'
-                          }
+                          placeholder={t('lastName') || 'Last name'}
                         />
-
                       </div>
-
                     </div>
-
                   )}
 
-
                   <div>
-
-                    <label
-                      htmlFor="email"
-                      className={LABEL}
-                    >
-                      {t('email') ||
-                        'Email address'}
+                    <label htmlFor="email" className={LABEL}>
+                      {t('email') || 'Email address'}
                     </label>
 
                     <div className="relative">
-
                       <Mail
                         className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--neu-muted)]"
                         size={18}
@@ -998,41 +764,29 @@ export function Auth() {
                         className={FIELD}
                         placeholder="you@example.com"
                       />
-
                     </div>
-
                   </div>
 
-
                   <div>
-
                     <div className="mb-2 flex items-center justify-between">
-
                       <label
                         htmlFor="password"
                         className="block text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]"
                       >
-                        {t('password') ||
-                          'Password'}
+                        {t('password') || 'Password'}
                       </label>
 
                       {mode === 'login' && (
-
                         <Link
                           to="/auth?forgot=true"
                           className="text-xs font-bold text-[color:var(--neu-accent-dark)] hover:underline"
                         >
-                          {t('forgot') ||
-                            'Forgot password?'}
+                          {t('forgot') || 'Forgot password?'}
                         </Link>
-
                       )}
-
                     </div>
 
-
                     <div className="relative">
-
                       <LockKeyhole
                         className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--neu-muted)]"
                         size={18}
@@ -1040,63 +794,33 @@ export function Auth() {
 
                       <input
                         id="password"
-                        type={
-                          showPassword
-                            ? 'text'
-                            : 'password'
-                        }
+                        type={showPassword ? 'text' : 'password'}
                         required
                         minLength={6}
                         value={form.password}
-                        onChange={field(
-                          'password'
-                        )}
+                        onChange={field('password')}
                         className={`${FIELD} pr-12`}
                         placeholder="••••••••"
                       />
 
-
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowPassword(
-                            s => !s
-                          )
-                        }
+                        onClick={() => setShowPassword((s) => !s)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-[color:var(--neu-muted)] hover:text-[color:var(--neu-accent-dark)]"
-                        aria-label={
-                          showPassword
-                            ? 'Hide password'
-                            : 'Show password'
-                        }
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
-
-                        {showPassword ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
-
                     </div>
-
                   </div>
 
-
                   {mode === 'register' && (
-
                     <div>
-
-                      <label
-                        htmlFor="confirm"
-                        className={LABEL}
-                      >
+                      <label htmlFor="confirm" className={LABEL}>
                         Confirm password
                       </label>
 
                       <div className="relative">
-
                         <LockKeyhole
                           className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--neu-muted)]"
                           size={18}
@@ -1104,55 +828,29 @@ export function Auth() {
 
                         <input
                           id="confirm"
-                          type={
-                            showConfirm
-                              ? 'text'
-                              : 'password'
-                          }
+                          type={showConfirm ? 'text' : 'password'}
                           required
                           minLength={6}
                           value={form.confirm}
-                          onChange={field(
-                            'confirm'
-                          )}
+                          onChange={field('confirm')}
                           className={`${FIELD} pr-12`}
                           placeholder="••••••••"
                         />
 
                         <button
                           type="button"
-                          onClick={() =>
-                            setShowConfirm(
-                              s => !s
-                            )
-                          }
+                          onClick={() => setShowConfirm((s) => !s)}
                           className="absolute right-4 top-1/2 -translate-y-1/2 text-[color:var(--neu-muted)] hover:text-[color:var(--neu-accent-dark)]"
-                          aria-label={
-                            showConfirm
-                              ? 'Hide password'
-                              : 'Show password'
-                          }
+                          aria-label={showConfirm ? 'Hide password' : 'Show password'}
                         >
-
-                          {showConfirm ? (
-                            <EyeOff size={18} />
-                          ) : (
-                            <Eye size={18} />
-                          )}
-
+                          {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
-
                       </div>
-
                     </div>
-
                   )}
 
-
                   {mode === 'register' && (
-
                     <label className="flex gap-3 pt-1 text-xs leading-5 text-[color:var(--neu-muted)]">
-
                       <input
                         required
                         type="checkbox"
@@ -1160,10 +858,7 @@ export function Auth() {
                       />
 
                       <span>
-
-                        {t('agree') ||
-                          'I agree to'}{' '}
-
+                        {t('agree') || 'I agree to'}{' '}
                         <Link
                           to="/contact"
                           className="font-bold text-[color:var(--neu-accent-dark)] hover:underline"
@@ -1171,56 +866,33 @@ export function Auth() {
                           Privacy Policy
                         </Link>
                         .
-
                       </span>
-
                     </label>
-
                   )}
-
 
                   <button
                     type="submit"
                     disabled={submitting}
                     className="neu-raised-sm neu-pressable group mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[color:var(--neu-accent)] px-5 text-sm font-bold text-white disabled:opacity-60"
                   >
-
                     {submitting ? (
-
-                      <Loader2
-                        size={17}
-                        className="animate-spin"
-                      />
-
+                      <Loader2 size={17} className="animate-spin" />
                     ) : mode === 'login' ? (
-
-                      t('access') ||
-                      'Sign in'
-
+                      t('access') || 'Sign in'
                     ) : (
-
-                      t('create') ||
-                      'Create account'
-
+                      t('create') || 'Create account'
                     )}
 
-
                     {!submitting && (
-
                       <ArrowRight
                         size={17}
                         className="transition-transform group-hover:translate-x-1"
                       />
-
                     )}
-
                   </button>
-
                 </form>
 
-
                 <div className="my-6 flex items-center gap-3">
-
                   <span className="h-px flex-1 bg-[color:var(--neu-dark)]" />
 
                   <span className="text-[11px] font-bold uppercase tracking-widest text-[color:var(--neu-muted)]">
@@ -1228,9 +900,7 @@ export function Auth() {
                   </span>
 
                   <span className="h-px flex-1 bg-[color:var(--neu-dark)]" />
-
                 </div>
-
 
                 <button
                   type="button"
@@ -1238,67 +908,36 @@ export function Auth() {
                   disabled={googleLoading}
                   className="neu-raised-sm neu-pressable flex h-14 w-full items-center justify-center gap-3 rounded-2xl text-sm font-bold text-[color:var(--neu-text)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-
                   {googleLoading ? (
-
                     <>
-
-                      <Loader2
-                        size={19}
-                        className="animate-spin"
-                      />
-
-                      <span>
-                        Connecting to Google...
-                      </span>
-
+                      <Loader2 size={19} className="animate-spin" />
+                      <span>Connecting to Google...</span>
                     </>
-
                   ) : (
-
                     <>
-
                       <GoogleIcon />
-
                       <span>
-                        {t('google') ||
-                          t('continueGoogle') ||
-                          'Continue with Google'}
+                        {t('google') || t('continueGoogle') || 'Continue with Google'}
                       </span>
-
                     </>
-
                   )}
-
                 </button>
 
-
                 <div className="mt-5 flex items-center justify-center gap-2 text-[11px] text-[color:var(--neu-muted)]">
-
                   <ShieldCheck size={14} />
-
                   Secure authentication powered by Firebase
-
                 </div>
-
 
                 <p className="mt-6 text-center text-xs leading-5 text-[color:var(--neu-muted)]">
                   By continuing, you agree to AgriSense AI's terms and privacy policy.
                 </p>
-
               </>
-
             )}
-
           </section>
-
         </div>
-
       </div>
-
     </main>
   )
 }
 
 export default Auth
-
