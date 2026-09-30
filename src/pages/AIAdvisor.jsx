@@ -1,14 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
-  Bot,
-  Send,
-  Sparkles,
-  LoaderCircle,
-  Mic,
-  MicOff,
-  Trash2,
-} from 'lucide-react'
+import { Bot, Send, Sparkles, LoaderCircle, Mic, MicOff, Trash2 } from 'lucide-react'
 import { useLanguage } from '../i18n'
+import './Auth.jsx'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -20,12 +13,7 @@ export function AIAdvisor() {
   const [listening, setListening] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
 
-  const [messages, setMessages] = useState([
-    {
-      role: 'ai',
-      text: t('advisorWelcome'),
-    },
-  ])
+  const [messages, setMessages] = useState([{ role: 'ai', text: t('advisorWelcome') }])
 
   const recognitionRef = useRef(null)
   const listeningRef = useRef(false)
@@ -75,13 +63,7 @@ export function AIAdvisor() {
       stopVoiceInput()
     }
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      {
-        role: 'user',
-        text: userMessage,
-      },
-    ])
+    setMessages((currentMessages) => [...currentMessages, { role: 'user', text: userMessage }])
 
     setQ('')
     setLoading(true)
@@ -89,12 +71,8 @@ export function AIAdvisor() {
     try {
       const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ujumbe: userMessage,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ujumbe: userMessage }),
       })
 
       let json = {}
@@ -106,31 +84,19 @@ export function AIAdvisor() {
       }
 
       if (!res.ok) {
-        throw new Error(
-          json?.detail ||
-            json?.message ||
-            'Server error'
-        )
+        throw new Error(json?.detail || json?.message || 'Server error')
       }
 
       setMessages((currentMessages) => [
         ...currentMessages,
-        {
-          role: 'ai',
-          text:
-            json?.jibu ||
-            t('chatError'),
-        },
+        { role: 'ai', text: json?.jibu || t('chatError') },
       ])
     } catch (err) {
       console.error('Chat error:', err)
 
       setMessages((currentMessages) => [
         ...currentMessages,
-        {
-          role: 'ai',
-          text: t('chatError'),
-        },
+        { role: 'ai', text: t('chatError') },
       ])
     } finally {
       setLoading(false)
@@ -148,9 +114,7 @@ export function AIAdvisor() {
 
   const deleteMessage = (indexToDelete) => {
     setMessages((currentMessages) =>
-      currentMessages.filter(
-        (_, index) => index !== indexToDelete
-      )
+      currentMessages.filter((_, index) => index !== indexToDelete)
     )
   }
 
@@ -168,26 +132,17 @@ export function AIAdvisor() {
 
   const stopVisualizer = () => {
     if (animationFrameRef.current) {
-      cancelAnimationFrame(
-        animationFrameRef.current
-      )
-
+      cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = null
     }
 
     if (microphoneStreamRef.current) {
-      microphoneStreamRef.current
-        .getTracks()
-        .forEach((track) => track.stop())
-
+      microphoneStreamRef.current.getTracks().forEach((track) => track.stop())
       microphoneStreamRef.current = null
     }
 
     if (audioContextRef.current) {
-      audioContextRef.current
-        .close()
-        .catch(() => {})
-
+      audioContextRef.current.close().catch(() => {})
       audioContextRef.current = null
     }
 
@@ -198,23 +153,15 @@ export function AIAdvisor() {
   const startVisualizer = async () => {
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
-        console.error(
-          'Microphone API is not supported.'
-        )
-
+        console.error('Microphone API is not supported.')
         return false
       }
 
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        })
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
       microphoneStreamRef.current = stream
 
-      const AudioContext =
-        window.AudioContext ||
-        window.webkitAudioContext
+      const AudioContext = window.AudioContext || window.webkitAudioContext
 
       if (!AudioContext) {
         return true
@@ -228,74 +175,47 @@ export function AIAdvisor() {
         await audioContext.resume()
       }
 
-      const analyser =
-        audioContext.createAnalyser()
+      const analyser = audioContext.createAnalyser()
 
       analyser.fftSize = 256
       analyser.smoothingTimeConstant = 0.75
 
       analyserRef.current = analyser
 
-      const microphone =
-        audioContext.createMediaStreamSource(
-          stream
-        )
+      const microphone = audioContext.createMediaStreamSource(stream)
 
       microphone.connect(analyser)
 
-      const dataArray = new Uint8Array(
-        analyser.frequencyBinCount
-      )
+      const dataArray = new Uint8Array(analyser.frequencyBinCount)
 
       const updateWaveform = () => {
-        if (
-          !analyserRef.current ||
-          !listeningRef.current
-        ) {
+        if (!analyserRef.current || !listeningRef.current) {
           return
         }
 
-        analyser.getByteTimeDomainData(
-          dataArray
-        )
+        analyser.getByteTimeDomainData(dataArray)
 
         let sum = 0
 
-        for (
-          let i = 0;
-          i < dataArray.length;
-          i++
-        ) {
+        for (let i = 0; i < dataArray.length; i++) {
           const value = dataArray[i] - 128
           sum += value * value
         }
 
-        const rms = Math.sqrt(
-          sum / dataArray.length
-        )
+        const rms = Math.sqrt(sum / dataArray.length)
 
-        const normalizedLevel = Math.min(
-          100,
-          rms * 3.5
-        )
+        const normalizedLevel = Math.min(100, rms * 3.5)
 
         setAudioLevel(normalizedLevel)
 
-        animationFrameRef.current =
-          requestAnimationFrame(
-            updateWaveform
-          )
+        animationFrameRef.current = requestAnimationFrame(updateWaveform)
       }
 
       updateWaveform()
 
       return true
     } catch (error) {
-      console.error(
-        'Microphone permission error:',
-        error
-      )
-
+      console.error('Microphone permission error:', error)
       return false
     }
   }
@@ -329,9 +249,7 @@ export function AIAdvisor() {
   // =========================================================
 
   const createRecognition = () => {
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
 
     if (!SpeechRecognition) {
       return null
@@ -347,22 +265,14 @@ export function AIAdvisor() {
      * Use the selected application language.
      * Swahili is the default language for Tanzanian users.
      */
-    recognition.lang =
-      lang === 'SW'
-        ? 'sw-TZ'
-        : 'en-US'
+    recognition.lang = lang === 'SW' ? 'sw-TZ' : 'en-US'
 
     recognition.onresult = (event) => {
       let finalText = ''
       let interimText = ''
 
-      for (
-        let i = event.resultIndex;
-        i < event.results.length;
-        i++
-      ) {
-        const transcript =
-          event.results[i][0].transcript
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript
 
         if (event.results[i].isFinal) {
           finalText += `${transcript} `
@@ -372,17 +282,14 @@ export function AIAdvisor() {
       }
 
       if (finalText) {
-        finalTranscriptRef.current +=
-          finalText
+        finalTranscriptRef.current += finalText
       }
 
-      interimTranscriptRef.current =
-        interimText
+      interimTranscriptRef.current = interimText
 
-      const combinedText =
-        `${finalTranscriptRef.current} ${interimTranscriptRef.current}`
-          .replace(/\s+/g, ' ')
-          .trim()
+      const combinedText = `${finalTranscriptRef.current} ${interimTranscriptRef.current}`
+        .replace(/\s+/g, ' ')
+        .trim()
 
       if (combinedText) {
         setQ(combinedText)
@@ -390,19 +297,13 @@ export function AIAdvisor() {
     }
 
     recognition.onerror = (event) => {
-      console.error(
-        'Speech recognition error:',
-        event.error
-      )
+      console.error('Speech recognition error:', event.error)
 
       /*
        * Permission-related errors should stop
        * the microphone completely.
        */
-      if (
-        event.error === 'not-allowed' ||
-        event.error === 'service-not-allowed'
-      ) {
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         stopVoiceInput()
       }
     }
@@ -429,32 +330,25 @@ export function AIAdvisor() {
         try {
           recognition.start()
 
-          console.log(
-            'Speech recognition restarted'
-          )
+          console.log('Speech recognition restarted')
         } catch (error) {
           /*
            * If the existing instance cannot restart,
            * create a fresh recognition instance.
            */
           try {
-            const newRecognition =
-              createRecognition()
+            const newRecognition = createRecognition()
 
             if (!newRecognition) {
               stopVoiceInput()
               return
             }
 
-            recognitionRef.current =
-              newRecognition
+            recognitionRef.current = newRecognition
 
             newRecognition.start()
           } catch (restartError) {
-            console.error(
-              'Could not restart speech recognition:',
-              restartError
-            )
+            console.error('Could not restart speech recognition:', restartError)
           }
         }
       }, 300)
@@ -468,15 +362,11 @@ export function AIAdvisor() {
       /*
        * Speech ending does not stop the microphone.
        */
-      console.log(
-        'Speech ended - microphone remains active'
-      )
+      console.log('Speech ended - microphone remains active')
     }
 
     recognition.onnomatch = () => {
-      console.log(
-        'No speech match found'
-      )
+      console.log('No speech match found')
     }
 
     return recognition
@@ -497,64 +387,45 @@ export function AIAdvisor() {
       return
     }
 
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
 
     if (!SpeechRecognition) {
-      alert(
-        t('microphoneUnavailable')
-      )
-
+      alert(t('microphoneUnavailable'))
       return
     }
 
-    const visualizerStarted =
-      await startVisualizer()
+    const visualizerStarted = await startVisualizer()
 
     if (!visualizerStarted) {
-      alert(
-        t('microphonePermission')
-      )
-
+      alert(t('microphonePermission'))
       return
     }
 
     /*
      * Keep any text that was already typed.
      */
-    finalTranscriptRef.current =
-      q.trim()
-        ? `${q.trim()} `
-        : ''
+    finalTranscriptRef.current = q.trim() ? `${q.trim()} ` : ''
 
     interimTranscriptRef.current = ''
 
     listeningRef.current = true
     setListening(true)
 
-    const recognition =
-      createRecognition()
+    const recognition = createRecognition()
 
     if (!recognition) {
       stopVoiceInput()
       return
     }
 
-    recognitionRef.current =
-      recognition
+    recognitionRef.current = recognition
 
     try {
       recognition.start()
 
-      console.log(
-        'Microphone started'
-      )
+      console.log('Microphone started')
     } catch (error) {
-      console.error(
-        'Could not start recognition:',
-        error
-      )
+      console.error('Could not start recognition:', error)
 
       stopVoiceInput()
     }
@@ -566,16 +437,8 @@ export function AIAdvisor() {
 
   useEffect(() => {
     setMessages((currentMessages) => {
-      if (
-        currentMessages.length === 1 &&
-        currentMessages[0].role === 'ai'
-      ) {
-        return [
-          {
-            role: 'ai',
-            text: t('advisorWelcome'),
-          },
-        ]
+      if (currentMessages.length === 1 && currentMessages[0].role === 'ai') {
+        return [{ role: 'ai', text: t('advisorWelcome') }]
       }
 
       return currentMessages
@@ -609,58 +472,37 @@ export function AIAdvisor() {
   // =========================================================
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-7 sm:px-8">
-
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
-
-      <p className="section-kicker">
+    <main className="neu-surface mx-auto max-w-4xl px-4 py-7 sm:px-8">
+      {/* HEADER */}
+      <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]">
         {t('intelligence')}
       </p>
 
-      <h1 className="text-3xl font-extrabold sm:text-4xl">
+      <h1 className="text-3xl font-extrabold text-[color:var(--neu-text)] sm:text-4xl">
         {t('advisor')}
       </h1>
 
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+      <p className="mt-2 text-sm text-[color:var(--neu-muted)]">
         {lang === 'SW'
           ? 'Uliza AgriSense AI kuhusu shamba lako, udongo, mazao, hali ya hewa au mbinu za kilimo.'
           : 'Ask AgriSense AI about your farm, soil, crops, weather, or farming practices.'}
       </p>
 
-      {/* =====================================================
-          CHAT CONTAINER
-      ===================================================== */}
-
-      <div className="card mt-8 overflow-hidden">
-
-        {/* ===================================================
-            CHAT
-        =================================================== */}
-
-        <div className="max-h-[55vh] space-y-4 overflow-y-auto p-5 sm:p-6">
+      {/* CHAT CONTAINER */}
+      <div className="neu-raised mt-8 overflow-hidden rounded-3xl">
+        {/* MESSAGES */}
+        <div className="max-h-[55vh] space-y-5 overflow-y-auto p-5 sm:p-6">
           {messages.map((m, i) => (
-            <div
-              key={i}
-              className={`group flex gap-3 ${
-                m.role === 'user'
-                  ? 'justify-end'
-                  : ''
-              }`}
-            >
+            <div key={i} className={`group flex gap-3 ${m.role === 'user' ? 'justify-end' : ''}`}>
               <div
                 className={`relative max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 pr-10 text-sm leading-6 ${
                   m.role === 'user'
-                    ? 'bg-forest text-white'
-                    : 'bg-mint text-forest dark:bg-green-950/40 dark:text-green-100'
+                    ? 'neu-raised-sm bg-[color:var(--neu-accent)] text-white'
+                    : 'neu-inset text-[color:var(--neu-text)]'
                 }`}
               >
                 {m.role === 'ai' && (
-                  <Bot
-                    size={15}
-                    className="mb-1 mr-2 inline"
-                  />
+                  <Bot size={15} className="mb-1 mr-2 inline text-[color:var(--neu-accent)]" />
                 )}
 
                 {m.text}
@@ -668,15 +510,13 @@ export function AIAdvisor() {
                 {/* DELETE MESSAGE */}
                 <button
                   type="button"
-                  onClick={() =>
-                    deleteMessage(i)
-                  }
+                  onClick={() => deleteMessage(i)}
                   aria-label={t('deleteMessage')}
                   title={t('deleteMessage')}
                   className={`absolute right-2 top-2 rounded-md p-1.5 transition ${
                     m.role === 'user'
-                      ? 'text-white/60 hover:bg-white/10 hover:text-white'
-                      : 'text-slate-400 hover:bg-black/5 hover:text-red-500 dark:hover:bg-white/10'
+                      ? 'text-white/70 hover:bg-white/10 hover:text-white'
+                      : 'text-[color:var(--neu-muted)] hover:text-red-500'
                   }`}
                 >
                   <Trash2 size={14} />
@@ -685,16 +525,13 @@ export function AIAdvisor() {
             </div>
           ))}
 
-          {/* =================================================
-              LOADING
-          ================================================= */}
-
+          {/* LOADING */}
           {loading && (
             <div className="flex gap-3">
-              <div className="relative max-w-[85%] rounded-2xl bg-mint px-4 py-3 pr-10 text-sm text-forest dark:bg-green-950/40 dark:text-green-100">
+              <div className="neu-inset relative max-w-[85%] rounded-2xl px-4 py-3 pr-10 text-sm text-[color:var(--neu-text)]">
                 <LoaderCircle
                   size={15}
-                  className="mr-2 inline animate-spin"
+                  className="mr-2 inline animate-spin text-[color:var(--neu-accent)]"
                 />
 
                 {t('typing')}
@@ -703,114 +540,63 @@ export function AIAdvisor() {
           )}
         </div>
 
-        {/* ===================================================
-            SUGGESTED QUESTIONS
-        =================================================== */}
-
-        <div className="border-t px-4 py-4 dark:border-white/10 sm:px-6">
+        {/* SUGGESTED QUESTIONS */}
+        <div className="border-t border-[color:var(--neu-dark)] px-4 py-4 sm:px-6">
           <div className="mb-3 flex items-center gap-2">
-            <Sparkles
-              size={17}
-              className="text-leaf"
-            />
+            <Sparkles size={17} className="text-[color:var(--neu-accent)]" />
 
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+            <p className="text-sm font-bold text-[color:var(--neu-text)]">
               {t('suggestedQuestions')}
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {suggestedQuestions.map(
-              (question, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() =>
-                    handleSuggestion(question)
-                  }
-                  disabled={loading}
-                  className="rounded-full border border-green-200 bg-green-50 px-3 py-2 text-left text-xs font-semibold text-forest transition hover:border-leaf hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-900/60 dark:bg-green-950/30 dark:text-green-100 dark:hover:bg-green-950/60 sm:text-sm"
-                >
-                  {question}
-                </button>
-              )
-            )}
+          <div className="flex flex-wrap gap-3">
+            {suggestedQuestions.map((question, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => handleSuggestion(question)}
+                disabled={loading}
+                className="neu-raised-sm neu-pressable rounded-full px-4 py-2 text-left text-xs font-semibold text-[color:var(--neu-text)] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+              >
+                {question}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* ===================================================
-            INPUT
-        =================================================== */}
-
-        <form
-          onSubmit={send}
-          className="border-t p-4 dark:border-white/10"
-        >
-          <div className="flex items-center gap-2">
-
+        {/* INPUT */}
+        <form onSubmit={send} className="border-t border-[color:var(--neu-dark)] p-4">
+          <div className="flex items-center gap-3">
             {/* INPUT AREA */}
             <div className="relative min-w-0 flex-1">
               <input
-                className={`input w-full min-w-0 ${
-                  listening
-                    ? 'border-green-500 pr-36'
-                    : 'pr-14'
+                className={`neu-inset h-12 w-full min-w-0 rounded-full bg-transparent pl-5 text-sm text-[color:var(--neu-text)] outline-none placeholder:text-[color:var(--neu-muted)] focus-visible:ring-2 focus-visible:ring-[color:var(--neu-accent)] disabled:opacity-60 ${
+                  listening ? 'pr-36' : 'pr-14'
                 }`}
                 value={q}
-                onChange={(e) =>
-                  setQ(e.target.value)
-                }
-                placeholder={
-                  listening
-                    ? t('listening')
-                    : t('askFarm')
-                }
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={listening ? t('listening') : t('askFarm')}
                 disabled={loading}
               />
 
-              {/* =================================================
-                  LIVE WAVEFORM
-              ================================================= */}
-
+              {/* LIVE WAVEFORM */}
               {listening && (
                 <div className="pointer-events-none absolute right-14 top-1/2 flex h-8 -translate-y-1/2 items-center gap-[2px]">
-                  {Array.from({
-                    length: 20,
-                  }).map((_, index) => {
-                    const center =
-                      Math.abs(
-                        index - 9.5
-                      )
+                  {Array.from({ length: 20 }).map((_, index) => {
+                    const center = Math.abs(index - 9.5)
 
-                    const wave =
-                      Math.max(
-                        0.15,
-                        1 - center / 10
-                      )
+                    const wave = Math.max(0.15, 1 - center / 10)
 
-                    const height =
-                      5 +
-                      audioLevel *
-                        wave *
-                        (0.35 +
-                          ((index * 7) % 5) /
-                            10)
+                    const height = 5 + audioLevel * wave * (0.35 + ((index * 7) % 5) / 10)
 
                     return (
                       <span
                         key={index}
-                        className="w-[2px] rounded-full bg-green-500 transition-all duration-75"
+                        className="w-[2px] rounded-full bg-[color:var(--neu-accent)] transition-all duration-75"
                         style={{
-                          height: `${Math.min(
-                            28,
-                            height
-                          )}px`,
-                          opacity:
-                            0.45 +
-                            Math.min(
-                              0.55,
-                              audioLevel / 100
-                            ),
+                          height: `${Math.min(28, height)}px`,
+                          opacity: 0.45 + Math.min(0.55, audioLevel / 100),
                         }}
                       />
                     )
@@ -818,52 +604,30 @@ export function AIAdvisor() {
                 </div>
               )}
 
-              {/* =================================================
-                  MICROPHONE
-              ================================================= */}
-
+              {/* MICROPHONE */}
               <button
                 type="button"
-                onClick={
-                  startVoiceInput
-                }
+                onClick={startVoiceInput}
                 disabled={loading}
-                aria-label={
-                  listening
-                    ? t('stopListening')
-                    : t('startMicrophone')
-                }
-                title={
-                  listening
-                    ? t('stopListening')
-                    : t('startMicrophone')
-                }
+                aria-label={listening ? t('stopListening') : t('startMicrophone')}
+                title={listening ? t('stopListening') : t('startMicrophone')}
                 className={`absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full transition ${
                   listening
                     ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
-                    : 'text-slate-500 hover:bg-green-50 hover:text-forest dark:text-slate-400 dark:hover:bg-green-950/40'
+                    : 'neu-raised-sm neu-pressable text-[color:var(--neu-text)]'
                 }`}
               >
-                {listening ? (
-                  <MicOff size={19} />
-                ) : (
-                  <Mic size={19} />
-                )}
+                {listening ? <MicOff size={19} /> : <Mic size={19} />}
               </button>
             </div>
 
-            {/* =================================================
-                SEND
-            ================================================= */}
-
+            {/* SEND */}
             <button
               type="submit"
-              disabled={
-                loading || !q.trim()
-              }
+              disabled={loading || !q.trim()}
               aria-label={t('send')}
               title={t('send')}
-              className="btn-primary shrink-0 px-4"
+              className="neu-raised-sm neu-pressable flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[color:var(--neu-accent)] text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send size={18} />
             </button>

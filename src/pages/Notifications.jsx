@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Bell, CheckCircle2, TriangleAlert, Clock } from 'lucide-react'
 import { useLanguage } from '../i18n'
+import './Auth.jsx'
 
 export function Notifications() {
   const { t } = useLanguage()
@@ -48,26 +49,27 @@ export function Notifications() {
     [t('sensorReady'), t('sensorReadyDesc'), Bell, 'green'],
   ]
 
+  // Neumorphic icon badges: same raised surface, tinted icon color per severity.
   const rangiMuundo = {
-    red: 'bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400',
-    amber: 'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400',
-    green: 'bg-mint text-leaf',
+    red: 'text-red-500 dark:text-red-300',
+    amber: 'text-amber-500 dark:text-amber-300',
+    green: 'text-[color:var(--neu-accent)]',
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-7 sm:px-8">
-      <p className="section-kicker">{t('updates')}</p>
-      <h1 className="text-3xl font-extrabold sm:text-4xl">{t('notifications')}</h1>
+    <main className="neu-surface mx-auto max-w-4xl px-4 py-7 sm:px-8">
+      <p className="text-xs font-bold uppercase tracking-wide text-[color:var(--neu-muted)]">{t('updates')}</p>
+      <h1 className="text-3xl font-extrabold text-[color:var(--neu-text)] sm:text-4xl">{t('notifications')}</h1>
 
       <div className="mt-8 space-y-3">
         {items.map(([a, b, I, c]) => (
-          <div className="card flex gap-4 p-5" key={a}>
-            <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${rangiMuundo[c]}`}>
+          <div className="neu-raised flex gap-4 rounded-2xl p-5" key={a}>
+            <span className={`neu-raised-sm grid h-11 w-11 shrink-0 place-items-center rounded-xl ${rangiMuundo[c]}`}>
               <I size={19} />
             </span>
             <div>
-              <h2 className="font-extrabold">{a}</h2>
-              <p className="mt-1 text-sm text-slate-500">{b}</p>
+              <h2 className="font-extrabold text-[color:var(--neu-text)]">{a}</h2>
+              <p className="mt-1 text-sm text-[color:var(--neu-muted)]">{b}</p>
             </div>
           </div>
         ))}
