@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, useNavigate } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import { AppRoutes } from './routes'
 import './index.css'
 import { LanguageProvider } from './i18n'
+import { AuthProvider } from './context/AuthContext'
 
 function Root() {
   const [theme, setTheme] = useState(localStorage.getItem('agrisense-theme') || 'system')
@@ -28,7 +29,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <LanguageProvider>
-        <Root />
+        <AuthProvider>
+          <Root />
+        </AuthProvider>
       </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>

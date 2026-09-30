@@ -20,6 +20,7 @@ import {
   Settings
 } from 'lucide-react'
 import { useLanguage } from '../i18n'
+import { useAuth } from '../context/AuthContext' // CHANGED: import auth hook
 
 export function Logo() {
   return (
@@ -185,21 +186,25 @@ const sideLinks = [
 export function Sidebar({ mobileOpen = false, onClose }) {
   const navigate = useNavigate()
   const { t } = useLanguage()
+  const { logout } = useAuth() // CHANGED: real logout from AuthContext
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false) // CHANGED: prevents double clicks
 
   const handleLogoutClick = () => {
     onClose?.()
     setShowLogoutConfirm(true)
   }
 
-  const handleConfirmLogout = () => {
-    localStorage.removeItem('agrisense-auth')
-    localStorage.removeItem('agrisense-user-name')
-    localStorage.removeItem('agrisense-user-email')
-
+  // CHANGED: uses the real logout (clears token + tells the server)
+  const handleConfirmLogout = async () => {
+    setLoggingOut(true)
     setShowLogoutConfirm(false)
-    navigate('/')
+    // Go to a public page FIRST, so the protected layout does not
+    // race us and redirect to /auth when the user becomes null.
+    navigate('/', { replace: true })
+    await logout()
+    setLoggingOut(false)
   }
 
   const navigation = (
@@ -262,7 +267,8 @@ export function Sidebar({ mobileOpen = false, onClose }) {
       <button
         type="button"
         onClick={handleLogoutClick}
-        className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-500 transition hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-red-950/20 dark:hover:text-red-400"
+        disabled={loggingOut}
+        className="mt-3 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-500 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-60 dark:text-slate-300 dark:hover:bg-red-950/20 dark:hover:text-red-400"
       >
         <LogOut size={18} />
         {t('logout')}
@@ -367,4 +373,3 @@ export function Sidebar({ mobileOpen = false, onClose }) {
     </>
   )
 }
-

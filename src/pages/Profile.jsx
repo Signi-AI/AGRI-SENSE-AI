@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Camera, Mail, Save, UserRound } from 'lucide-react'
+import { Camera, Mail, UserRound } from 'lucide-react'
 import { useLanguage } from '../i18n'
 import './Auth.jsx'
 

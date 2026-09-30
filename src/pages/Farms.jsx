@@ -39,13 +39,17 @@ const BTN_SOFT = 'neu-raised-sm neu-pressable inline-flex items-center justify-c
 
 export function Farms() {
   const { t } = useLanguage();
+  const { user } = useAuth(); // CHANGED
+
+  // CHANGED: one storage key per user, so accounts never see each other's farms
+  const storageKey = `agrisense_farms_${user?.id ?? 'guest'}`;
 
   const [farms, setFarms] = useState(() => {
     try {
       const saved = localStorage.getItem('agrisense_farms');
       return saved ? JSON.parse(saved) : DEFAULT_FARMS;
     } catch {
-      return DEFAULT_FARMS;
+      return []; // CHANGED
     }
   });
 

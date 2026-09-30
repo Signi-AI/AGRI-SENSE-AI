@@ -23,7 +23,6 @@ import { auth } from '../firebase'
 
 /* =====================================================================
    NEUMORPHIC GREEN STYLES
-===================================================================== */
 
 const neuCss = `
 @layer components {
@@ -146,7 +145,6 @@ if (typeof document !== 'undefined') {
 
 /* =====================================================================
    GOOGLE ICON
-===================================================================== */
 
 function GoogleIcon() {
   return (
@@ -180,7 +178,6 @@ function GoogleIcon() {
 
 /* =====================================================================
    FORM STYLES
-===================================================================== */
 
 const FIELD =
   'neu-inset neu-pressable h-14 w-full rounded-2xl border-0 pl-11 pr-4 text-sm font-medium outline-none text-[color:var(--neu-text)] placeholder:text-[color:var(--neu-muted)]'
@@ -190,7 +187,6 @@ const LABEL =
 
 /* =====================================================================
    CURRENT USER HELPERS
-===================================================================== */
 
 export function getCurrentUser() {
   try {
@@ -220,7 +216,6 @@ export function getCurrentUser() {
 
 /* =====================================================================
    SAVE USER NAME
-===================================================================== */
 
 export function saveUserName(name) {
   const cleanName = String(name || '').trim()
@@ -292,7 +287,6 @@ export function saveUserName(name) {
 /* =====================================================================
    CHANGE USER PASSWORD
    Frontend demo only.
-===================================================================== */
 
 export function changeUserPassword(
   currentPassword,
@@ -352,7 +346,6 @@ export function changeUserPassword(
 
 /* =====================================================================
    AUTH COMPONENT
-===================================================================== */
 
 export function Auth() {
   const [mode, setMode] = useState('login')

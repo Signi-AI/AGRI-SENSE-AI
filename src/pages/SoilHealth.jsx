@@ -11,10 +11,22 @@ import {
   AlertTriangle,
   Loader2,
   BrainCircuit,
+  Layers, // ADDED: icon ya kadi ya Soil Type
 } from 'lucide-react'
 import { useLanguage } from '../i18n'
+import { CROPS } from '../data/crops' // ADDED: orodha ya mazao
 
 const API_URL = import.meta.env.VITE_API_URL
+
+// ADDED: value = inayotumwa backend, key = ya tafsiri
+const SOIL_TYPES = [
+  { value: 'Loamy', key: 'soiltype_loamy' },
+  { value: 'Sandy', key: 'soiltype_sandy' },
+  { value: 'Sandy loam', key: 'soiltype_sandy_loam' },
+  { value: 'Clay', key: 'soiltype_clay' },
+  { value: 'Clay loam', key: 'soiltype_clay_loam' },
+  { value: 'Silty', key: 'soiltype_silty' },
+]
 
 const DEFAULT_SOIL_DATA = {
   nitrogen: 38,
@@ -27,79 +39,16 @@ const DEFAULT_SOIL_DATA = {
   rainfall: 18,
 }
 
+// CHANGED: "label" imekuwa "labelKey" ili itafsiriwe kwa t()
 const INPUT_CONFIG = [
-  {
-    key: 'ph',
-    label: 'Soil pH',
-    unit: 'pH',
-    icon: FlaskConical,
-    step: '0.1',
-    min: 0,
-    max: 14,
-  },
-  {
-    key: 'nitrogen',
-    label: 'Nitrogen',
-    unit: 'kg',
-    icon: Leaf,
-    step: '1',
-    min: 0,
-    max: 1000,
-  },
-  {
-    key: 'phosphorus',
-    label: 'Phosphorus',
-    unit: 'kg',
-    icon: Sprout,
-    step: '1',
-    min: 0,
-    max: 1000,
-  },
-  {
-    key: 'potassium',
-    label: 'Potassium',
-    unit: 'kg',
-    icon: Activity,
-    step: '1',
-    min: 0,
-    max: 1000,
-  },
-  {
-    key: 'humidity',
-    label: 'Humidity',
-    unit: '%',
-    icon: Droplets,
-    step: '1',
-    min: 0,
-    max: 100,
-  },
-  {
-    key: 'temperature',
-    label: 'Temperature',
-    unit: '°C',
-    icon: Thermometer,
-    step: '0.1',
-    min: -20,
-    max: 80,
-  },
-  {
-    key: 'rainfall',
-    label: 'Rainfall',
-    unit: 'mm',
-    icon: CloudRain,
-    step: '0.1',
-    min: 0,
-    max: 1000,
-  },
-  {
-    key: 'waterPh',
-    label: 'Water pH',
-    unit: 'pH',
-    icon: Droplets,
-    step: '0.1',
-    min: 0,
-    max: 14,
-  },
+  { key: 'ph', labelKey: 'soilPh', unit: 'pH', icon: FlaskConical, step: '0.1', min: 0, max: 14 },
+  { key: 'nitrogen', labelKey: 'nitrogen', unit: 'kg', icon: Leaf, step: '1', min: 0, max: 1000 },
+  { key: 'phosphorus', labelKey: 'phosphorus', unit: 'kg', icon: Sprout, step: '1', min: 0, max: 1000 },
+  { key: 'potassium', labelKey: 'potassium', unit: 'kg', icon: Activity, step: '1', min: 0, max: 1000 },
+  { key: 'humidity', labelKey: 'humidity', unit: '%', icon: Droplets, step: '1', min: 0, max: 100 },
+  { key: 'temperature', labelKey: 'temperature', unit: '°C', icon: Thermometer, step: '0.1', min: -20, max: 80 },
+  { key: 'rainfall', labelKey: 'rainfall', unit: 'mm', icon: CloudRain, step: '0.1', min: 0, max: 1000 },
+  { key: 'waterPh', labelKey: 'waterPh', unit: 'pH', icon: Droplets, step: '0.1', min: 0, max: 14 },
 ]
 
 const CROP_OPTIONS = [
@@ -159,13 +108,31 @@ const CROP_OPTIONS = [
 
 function extractDiagnosis(data) {
   if (!data) return null
+  return data.result || data.diagnosis || data.uchambuzi || data.data || data
+}
 
+// ADDED: kadi moja inayotumika na kadi zote (namba na soil type).
+// Bila hii, tungerudia madarasa ya CSS mara mbili (DRY).
+function SoilCard({ icon: Icon, label, htmlFor, children }) {
   return (
-    data.result ||
-    data.diagnosis ||
-    data.uchambuzi ||
-    data.data ||
-    data
+    <div className="group relative overflow-hidden rounded-2xl border border-emerald-800/20 bg-[#0d4b2b] p-5 shadow-md shadow-emerald-950/10 transition-all duration-200 hover:-translate-y-1 hover:bg-[#0a3d23] hover:shadow-xl dark:bg-[#0b3d24]">
+      <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-emerald-300/10 blur-2xl" />
+
+      <div className="relative">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-emerald-100">
+            <Icon size={19} />
+          </div>
+          <label htmlFor={htmlFor} className="text-sm font-bold text-white">
+            {label}
+          </label>
+        </div>
+
+        {children}
+
+        <div className="mt-3 h-px bg-white/10" />
+      </div>
+    </div>
   )
 }
 
@@ -216,11 +183,9 @@ export function SoilHealth() {
     try {
       const response = await fetch(`${API_URL}/api/diagnose`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          zao: soilType,
+          zao: crop, // CHANGED: awali ilikuwa soilType (kosa)
 
           usomaji_wa_sasa: {
             N: Number(soilData.nitrogen),
@@ -232,9 +197,7 @@ export function SoilHealth() {
           },
 
           aina_ya_udongo: soilType,
-
           ph_ya_maji: Number(soilData.waterPh),
-
           rainfall: Number(soilData.rainfall),
         }),
       })
@@ -242,30 +205,18 @@ export function SoilHealth() {
       const json = await response.json()
 
       if (!response.ok) {
-        throw new Error(
-          json?.message ||
-            json?.error ||
-            t('diagnosisFailed') ||
-            'Unable to complete soil diagnosis.'
-        )
+        throw new Error(json?.message || json?.error || t('diagnosisError')) // CHANGED
       }
 
       const result = extractDiagnosis(json)
 
       if (!result) {
-        throw new Error(
-          t('diagnosisFailed') ||
-            'The diagnosis service returned an empty response.'
-        )
+        throw new Error(t('diagnosisEmpty')) // CHANGED
       }
 
       setDiagnosis(result)
     } catch (err) {
-      setError(
-        err?.message ||
-          t('diagnosisFailed') ||
-          'Unable to complete soil diagnosis.'
-      )
+      setError(err?.message || t('diagnosisError')) // CHANGED
     } finally {
       setLoading(false)
     }
@@ -301,8 +252,7 @@ export function SoilHealth() {
           <div>
             <div className="neu-inset mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-[color:var(--neu-accent-dark)]">
               <BrainCircuit size={14} />
-
-              {t('SOIL INTELLIGENCE') || 'SOIL INTELLIGENCE'}
+              {t('soilIntelligence')} {/* CHANGED */}
             </div>
 
             <h1 className="text-2xl font-bold tracking-tight text-[color:var(--neu-text)] sm:text-3xl">
@@ -401,8 +351,26 @@ export function SoilHealth() {
                   </span>
                 </div>
               </div>
-            )
-          })}
+            </SoilCard>
+          ))}
+
+          {/* ADDED: SOIL TYPE kama kadi ya mwisho kwenye gridi */}
+          <SoilCard icon={Layers} label={t('soilType')} htmlFor="soil-type">
+            <div className="mt-5">
+              <select
+                id="soil-type"
+                value={soilType}
+                onChange={(e) => setSoilType(e.target.value)}
+                className="w-full border-b-2 border-white/20 bg-transparent pb-2 text-xl font-bold tracking-tight text-white outline-none transition focus:border-emerald-300"
+              >
+                {SOIL_TYPES.map((s) => (
+                  <option key={s.value} value={s.value} className="text-slate-900">
+                    {t(s.key)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </SoilCard>
         </div>
 
         {/* DIAGNOSIS BUTTON */}
