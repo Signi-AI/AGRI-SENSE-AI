@@ -1,7 +1,219 @@
 import React, { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, EyeOff, Leaf, LockKeyhole, Mail, UserRound, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, Leaf, LockKeyhole, Mail, UserRound, ArrowRight, LoaderCircle } from 'lucide-react'
 import { useLanguage } from '../i18n'
+import { useAuth } from '../context/AuthContext'
 
 function GoogleIcon(){return <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.23c0-.7-.06-1.37-.18-2.02H12v3.83h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.2Z"/><path fill="#34A853" d="M12 21.8c2.64 0 4.86-.87 6.48-2.37l-3.14-2.45c-.87.58-1.98.93-3.34.93-2.56 0-4.73-1.73-5.51-4.06H3.24v2.53A9.79 9.79 0 0 0 12 21.8Z"/><path fill="#FBBC05" d="M6.49 13.85A5.88 5.88 0 0 1 6.18 12c0-.64.11-1.26.31-1.85V7.62H3.24A9.8 9.8 0 0 0 2.2 12c0 1.58.38 3.07 1.04 4.38l3.25-2.53Z"/><path fill="#EA4335" d="M12 6.09c1.44 0 2.73.5 3.75 1.48l2.81-2.81C16.86 3.16 14.64 2.2 12 2.2a9.79 9.79 0 0 0-8.76 5.42l3.25 2.53C7.27 7.82 9.44 6.09 12 6.09Z"/></svg>}
-export function Auth(){const [mode,setMode]=useState('login');const [show,setShow]=useState(false);const [params]=useSearchParams();const navigate=useNavigate();const {t}=useLanguage();const submit=e=>{e.preventDefault();localStorage.setItem('agrisense-auth','true');navigate('/dashboard')};const forgot=params.get('forgot')==='true';return <main className="min-h-[calc(100vh-72px)] bg-gradient-to-br from-mint via-white to-[#edf5ee] px-4 py-8 sm:px-8 sm:py-12 dark:from-[#0b1710] dark:via-slate-950 dark:to-[#102419]"><div className="mx-auto grid max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-2xl dark:bg-slate-900 lg:grid-cols-2"><div className="hidden bg-forest p-10 text-white lg:flex lg:flex-col lg:justify-between"><div><div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10"><Leaf/></div><h1 className="mt-10 text-5xl font-extrabold leading-tight">Your farm.<br/><span className="text-lime-300">Your data.</span><br/>Smarter decisions.</h1><p className="mt-6 max-w-sm leading-7 text-green-50/80">Create your AgriSense AI workspace and prepare your farm for intelligent monitoring.</p></div><p className="text-xs text-green-100/60">AI-powered precision agriculture</p></div><div className="p-6 sm:p-10"><div className="mb-7 flex gap-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800"><button onClick={()=>setMode('login')} className={`flex-1 rounded-lg px-4 py-2 text-sm font-bold ${mode==='login'?'bg-white shadow dark:bg-slate-700':''}`}>{t('login')}</button><button onClick={()=>setMode('register')} className={`flex-1 rounded-lg px-4 py-2 text-sm font-bold ${mode==='register'?'bg-white shadow dark:bg-slate-700':''}`}>{t('create')}</button></div><h2 className="text-3xl font-extrabold">{forgot?'Forgot password?':mode==='login'?t('welcome'):t('create')}</h2><p className="mt-2 text-sm text-slate-500">{forgot?'Enter your email and we will send a reset link.':mode==='login'?t('continueDashboard'):t('startProfile')}</p>{forgot?<form onSubmit={e=>{e.preventDefault();alert('Demo: reset link would be sent by the backend.')}} className="mt-7 space-y-4"><div><label className="label">{t('email')}</label><div className="relative"><Mail className="absolute left-3 top-3.5 text-slate-400" size={17}/><input type="email" required className="input pl-10" placeholder="you@example.com"/></div></div><button className="btn-primary w-full">Send Reset Link <ArrowRight size={17}/></button><Link to="/auth" className="block text-center text-xs font-bold text-leaf">Back to Login</Link></form>:<><form onSubmit={submit} className="mt-7 space-y-4">{mode==='register'&&<div className="grid gap-4 sm:grid-cols-2"><div><label className="label">{t('firstName')}</label><div className="relative"><UserRound className="absolute left-3 top-3.5 text-slate-400" size={17}/><input required className="input pl-10" placeholder={t('firstName')}/></div></div><div><label className="label">{t('lastName')}</label><input required className="input" placeholder={t('lastName')}/></div></div>}<div><label className="label">{t('email')}</label><div className="relative"><Mail className="absolute left-3 top-3.5 text-slate-400" size={17}/><input type="email" required className="input pl-10" placeholder="you@example.com"/></div></div><div><label className="label">{t('password')}</label><div className="relative"><LockKeyhole className="absolute left-3 top-3.5 text-slate-400" size={17}/><input type={show?'text':'password'} required minLength={6} className="input pl-10 pr-11" placeholder="••••••••"/><button type="button" onClick={()=>setShow(!show)} className="absolute right-3 top-3.5 text-slate-400">{show?<EyeOff size={17}/>:<Eye size={17}/>}</button></div></div>{mode==='login'&&<div className="text-right"><Link to="/auth?forgot=true" className="text-xs font-bold text-leaf">{t('forgot')}</Link></div>}{mode==='register'&&<label className="flex gap-2 text-xs text-slate-500"><input required type="checkbox"/> {t('agree')} <Link to="/contact" className="font-bold text-leaf">Privacy Policy</Link>.</label>}<button className="btn-primary w-full">{mode==='login'?t('access'):t('create')}</button></form><div className="my-5 flex items-center gap-3 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-200 dark:bg-white/10"/><span>{t('or')}</span><span className="h-px flex-1 bg-slate-200 dark:bg-white/10"/></div><button onClick={submit} className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold transition hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800"><GoogleIcon/>{t('google')}</button><p className="mt-6 text-center text-xs text-slate-400">By continuing, you agree to AgriSense AI {t('terms')}</p></>}</div></div></main>}
+
+export function Auth() {
+  const [mode, setMode] = useState('login')
+  const [show, setShow] = useState(false)
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
+  const { t } = useLanguage()
+  const { login, register } = useAuth()
+
+  const [form, setForm] = useState({
+    firstName: '', lastName: '', email: '', password: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const forgot = params.get('forgot') === 'true'
+
+  const handleChange = (key) => (e) => {
+    setForm((prev) => ({ ...prev, [key]: e.target.value }))
+  }
+
+  const switchMode = (newMode) => {
+    setMode(newMode)
+    setError(null)
+  }
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+
+    try {
+      if (mode === 'login') {
+        await login({ email: form.email, password: form.password })
+        sessionStorage.removeItem('agrisense_new_user')
+      } else {
+        const fullName = `${form.firstName} ${form.lastName}`.trim()
+        await register({ name: fullName, email: form.email, password: form.password })
+        await login({ email: form.email, password: form.password })
+        sessionStorage.setItem('agrisense_new_user', '1')
+      }
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.message || t('somethingWentWrong')) // CHANGED: translated fallback message
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <main className="min-h-[calc(100vh-72px)] bg-gradient-to-br from-mint via-white to-[#edf5ee] px-4 py-8 sm:px-8 sm:py-12 dark:from-[#0b1710] dark:via-slate-950 dark:to-[#102419]">
+      <div className="mx-auto grid max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-2xl dark:bg-slate-900 lg:grid-cols-2">
+
+        <div className="hidden bg-forest p-10 text-white lg:flex lg:flex-col lg:justify-between">
+          <div>
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10"><Leaf/></div>
+            <h1 className="mt-10 text-5xl font-extrabold leading-tight">
+              Your farm.<br/><span className="text-lime-300">Your data.</span><br/>Smarter decisions.
+            </h1>
+            <p className="mt-6 max-w-sm leading-7 text-green-50/80">
+              Create your AgriSense AI workspace and prepare your farm for intelligent monitoring.
+            </p>
+          </div>
+          <p className="text-xs text-green-100/60">AI-powered precision agriculture</p>
+        </div>
+
+        <div className="p-6 sm:p-10">
+          <div className="mb-7 flex gap-2 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            <button type="button" onClick={() => switchMode('login')} className={`flex-1 rounded-lg px-4 py-2 text-sm font-bold ${mode==='login'?'bg-white shadow dark:bg-slate-700':''}`}>{t('login')}</button>
+            <button type="button" onClick={() => switchMode('register')} className={`flex-1 rounded-lg px-4 py-2 text-sm font-bold ${mode==='register'?'bg-white shadow dark:bg-slate-700':''}`}>{t('create')}</button>
+          </div>
+
+          <h2 className="text-3xl font-extrabold">
+            {forgot ? 'Forgot password?' : mode === 'login' ? t('welcome') : t('create')}
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            {forgot ? 'Enter your email and we will send a reset link.' : mode === 'login' ? t('continueDashboard') : t('startProfile')}
+          </p>
+
+          {forgot ? (
+            <form onSubmit={(e) => { e.preventDefault(); alert('Demo: reset link would be sent by the backend.') }} className="mt-7 space-y-4">
+              <div>
+                <label className="label">{t('email')}</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3.5 text-slate-400" size={17}/>
+                  <input type="email" required className="input pl-10" placeholder="you@example.com"/>
+                </div>
+              </div>
+              <button className="btn-primary w-full">Send Reset Link <ArrowRight size={17}/></button>
+              <Link to="/auth" className="block text-center text-xs font-bold text-leaf">Back to Login</Link>
+            </form>
+          ) : (
+            <>
+              <form onSubmit={submit} className="mt-7 space-y-4">
+                {mode === 'register' && (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="label">{t('firstName')}</label>
+                      <div className="relative">
+                        <UserRound className="absolute left-3 top-3.5 text-slate-400" size={17}/>
+                        <input
+                          required
+                          className="input pl-10"
+                          placeholder={t('firstName')}
+                          value={form.firstName}
+                          onChange={handleChange('firstName')}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="label">{t('lastName')}</label>
+                      <input
+                        required
+                        className="input"
+                        placeholder={t('lastName')}
+                        value={form.lastName}
+                        onChange={handleChange('lastName')}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="label">{t('email')}</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3.5 text-slate-400" size={17}/>
+                    <input
+                      type="email"
+                      required
+                      className="input pl-10"
+                      placeholder="you@example.com"
+                      value={form.email}
+                      onChange={handleChange('email')}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label">{t('password')}</label>
+                  <div className="relative">
+                    <LockKeyhole className="absolute left-3 top-3.5 text-slate-400" size={17}/>
+                    <input
+                      type={show ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      className="input pl-10 pr-11"
+                      placeholder="••••••••"
+                      value={form.password}
+                      onChange={handleChange('password')}
+                    />
+                    <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-3.5 text-slate-400">
+                      {show ? <EyeOff size={17}/> : <Eye size={17}/>}
+                    </button>
+                  </div>
+                </div>
+
+                {mode === 'login' && (
+                  <div className="text-right">
+                    <Link to="/auth?forgot=true" className="text-xs font-bold text-leaf">{t('forgot')}</Link>
+                  </div>
+                )}
+
+                {mode === 'register' && (
+                  <label className="flex gap-2 text-xs text-slate-500">
+                    <input required type="checkbox"/> {t('agree')} <Link to="/contact" className="font-bold text-leaf">Privacy Policy</Link>.
+                  </label>
+                )}
+
+                {error && (
+                  <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 dark:bg-red-950/30">
+                    {error}
+                  </p>
+                )}
+
+                <button disabled={loading} className="btn-primary w-full">
+                  {loading ? (
+                    <>
+                      <LoaderCircle size={17} className="animate-spin" />
+                      {t('loading')} {/* CHANGED: translated (was hardcoded "Please wait...") */}
+                    </>
+                  ) : (
+                    mode === 'login' ? t('access') : t('create')
+                  )}
+                </button>
+              </form>
+
+              <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+                <span className="h-px flex-1 bg-slate-200 dark:bg-white/10"/>
+                <span>{t('or')}</span>
+                <span className="h-px flex-1 bg-slate-200 dark:bg-white/10"/>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => alert('Google sign-in itapatikana hivi karibuni.')}
+                className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold transition hover:bg-slate-50 dark:border-white/10 dark:bg-slate-800"
+              >
+                <GoogleIcon/>{t('google')}
+              </button>
+
+              <p className="mt-6 text-center text-xs text-slate-400">
+                {t('byContinuing')} {t('terms')} {/* CHANGED: fully translated sentence */}
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    </main>
+  )
+}
+
+export default Auth

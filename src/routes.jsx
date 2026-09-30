@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 
 import { Navbar, Sidebar } from './components/layout'
-
+import { useAuth } from './context/AuthContext'
 import { Home } from './pages/Home'
 import { Auth } from './pages/Auth'
 import { Dashboard } from './pages/Dashboard'
@@ -50,6 +50,25 @@ function AppLayout({ theme, setTheme }) {
       </div>
     </div>
   )
+}
+
+// Guards the app pages: waits for the session check, then allows or redirects
+function ProtectedLayout({ theme, setTheme }) {
+  const { isAuthenticated, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center">
+        <p className="text-sm text-slate-500">Inapakia...</p>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" replace />
+  }
+
+  return <AppLayout theme={theme} setTheme={setTheme} />
 }
 
 export function AppRoutes({ theme, setTheme }) {
@@ -101,10 +120,10 @@ export function AppRoutes({ theme, setTheme }) {
         <Route path="/auth" element={<Auth />} />
       </Route>
 
-      {/* APP PAGES */}
+      {/* APP PAGES (protected) */}
       <Route
         element={
-          <AppLayout
+          <ProtectedLayout
             theme={theme}
             setTheme={setTheme}
           />

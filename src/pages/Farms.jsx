@@ -11,6 +11,7 @@ import {
   Save,
 } from 'lucide-react';
 import { useLanguage } from '../i18n';
+import { useAuth } from '../context/AuthContext'; // CHANGED
 
 const SOIL_TYPES = [
   'Loamy',
@@ -39,39 +40,22 @@ const EMPTY_FORM = {
   longitude: '',
 };
 
-const DEFAULT_FARMS = [
-  {
-    id: 1,
-    name: 'Maduhu Farm',
-    size: '2.5',
-    soilType: 'Loamy',
-    soilTexture: 'Medium',
-    location: 'Mbeya, Tanzania',
-    latitude: '',
-    longitude: '',
-  },
-  {
-    id: 2,
-    name: 'Kibena Farm',
-    size: '1.8',
-    soilType: 'Sandy',
-    soilTexture: 'Coarse',
-    location: 'Mbeya, Tanzania',
-    latitude: '',
-    longitude: '',
-  },
-];
+// CHANGED: DEFAULT_FARMS removed. New users now start with an empty list.
 
 export function Farms() {
   const { t } = useLanguage();
+  const { user } = useAuth(); // CHANGED
+
+  // CHANGED: one storage key per user, so accounts never see each other's farms
+  const storageKey = `agrisense_farms_${user?.id ?? 'guest'}`;
 
   const [farms, setFarms] = useState(() => {
     try {
-      const saved = localStorage.getItem('agrisense_farms');
+      const saved = localStorage.getItem(storageKey);
 
-      return saved ? JSON.parse(saved) : DEFAULT_FARMS;
+      return saved ? JSON.parse(saved) : []; // CHANGED: empty list instead of DEFAULT_FARMS
     } catch {
-      return DEFAULT_FARMS;
+      return []; // CHANGED
     }
   });
 
@@ -84,13 +68,13 @@ export function Farms() {
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState('');
 
-  // Save farms locally
+  // Save farms locally (per user)
   useEffect(() => {
     localStorage.setItem(
-      'agrisense_farms',
+      storageKey, // CHANGED
       JSON.stringify(farms)
     );
-  }, [farms]);
+  }, [farms, storageKey]); // CHANGED: storageKey added to dependencies
 
   // Handle input changes
   const handleChange = (e) => {
@@ -817,4 +801,3 @@ export function Farms() {
     </main>
   );
 }
-
