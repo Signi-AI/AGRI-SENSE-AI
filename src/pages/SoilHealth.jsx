@@ -11,21 +11,24 @@ import {
   AlertTriangle,
   Loader2,
   BrainCircuit,
-  Layers, // ADDED: icon ya kadi ya Soil Type
+  Layers,
 } from 'lucide-react'
 import { useLanguage } from '../i18n'
-import { CROPS } from '../data/crops' // ADDED: orodha ya mazao
 
 const API_URL = import.meta.env.VITE_API_URL
 
-// ADDED: value = inayotumwa backend, key = ya tafsiri
+// CHANGED: each option now has a UNIQUE id.
+// value = sent to the backend (Swahili, must match the backend),
+// key   = translation key shown to the user.
+// Before, several options shared the same value, so the dropdown
+// snapped back to the first match (e.g. "Sandy Loam" turned into "Sandy").
 const SOIL_TYPES = [
-  { value: 'Loamy', key: 'soiltype_loamy' },
-  { value: 'Sandy', key: 'soiltype_sandy' },
-  { value: 'Sandy loam', key: 'soiltype_sandy_loam' },
-  { value: 'Clay', key: 'soiltype_clay' },
-  { value: 'Clay loam', key: 'soiltype_clay_loam' },
-  { value: 'Silty', key: 'soiltype_silty' },
+  { id: 'loamy',      value: 'tifutifu',  key: 'soiltype_loamy' },
+  { id: 'sandy',      value: 'mchanga',   key: 'soiltype_sandy' },
+  { id: 'sandy_loam', value: 'mchanga',   key: 'soiltype_sandy_loam' },
+  { id: 'clay',       value: 'mfinyanzi', key: 'soiltype_clay' },
+  { id: 'clay_loam',  value: 'mfinyanzi', key: 'soiltype_clay_loam' },
+  { id: 'silty',      value: 'tifutifu',  key: 'soiltype_silty' },
 ]
 
 const DEFAULT_SOIL_DATA = {
@@ -39,7 +42,6 @@ const DEFAULT_SOIL_DATA = {
   rainfall: 18,
 }
 
-// CHANGED: "label" imekuwa "labelKey" ili itafsiriwe kwa t()
 const INPUT_CONFIG = [
   { key: 'ph', labelKey: 'soilPh', unit: 'pH', icon: FlaskConical, step: '0.1', min: 0, max: 14 },
   { key: 'nitrogen', labelKey: 'nitrogen', unit: 'kg', icon: Leaf, step: '1', min: 0, max: 1000 },
@@ -80,8 +82,6 @@ const CROP_OPTIONS = [
   { value: 'maboga', label: 'Maboga' },
   { value: 'limao', label: 'Limao' },
   { value: 'kunde', label: 'Kunde' },
-
-  // English / ML crop options
   { value: 'rice', label: 'Rice' },
   { value: 'maize', label: 'Maize' },
   { value: 'chickpea', label: 'Chickpea' },
@@ -111,8 +111,16 @@ function extractDiagnosis(data) {
   return data.result || data.diagnosis || data.uchambuzi || data.data || data
 }
 
-// ADDED: kadi moja inayotumika na kadi zote (namba na soil type).
-// Bila hii, tungerudia madarasa ya CSS mara mbili (DRY).
+function extractErrorMessage(json, fallback) {
+  const detail = json?.detail
+  if (typeof detail === 'string') return detail
+  if (detail?.hitilafu) {
+    const makosa = Array.isArray(detail.makosa) ? detail.makosa.join(' ') : ''
+    return `${detail.hitilafu} ${makosa}`.trim()
+  }
+  return json?.message || json?.error || fallback
+}
+
 function SoilCard({ icon: Icon, label, htmlFor, children }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-emerald-800/20 bg-[#0d4b2b] p-5 shadow-md shadow-emerald-950/10 transition-all duration-200 hover:-translate-y-1 hover:bg-[#0a3d23] hover:shadow-xl dark:bg-[#0b3d24]">
@@ -140,7 +148,8 @@ export function SoilHealth() {
   const { t } = useLanguage()
 
   const [soilData, setSoilData] = useState(DEFAULT_SOIL_DATA)
-  const [soilType, setSoilType] = useState('bamia')
+  const [crop, setCrop] = useState('bamia')
+  const [soilTypeId, setSoilTypeId] = useState('loamy') // CHANGED: stores the unique id, not the backend value
   const [diagnosis, setDiagnosis] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -157,10 +166,7 @@ export function SoilHealth() {
     setDiagnosis(null)
 
     if (!API_URL) {
-      setError(
-        t('Api URL is Missing') ||
-          'API URL is not configured. Please set VITE_API_URL.'
-      )
+      setError(t('apiUrlMissing')) // CHANGED: proper translation key
       return
     }
 
@@ -171,10 +177,7 @@ export function SoilHealth() {
         value => value === '' || value === null || value === undefined
       )
     ) {
-      setError(
-        t('completeAllFields') ||
-          'Please complete all soil and environmental measurements.'
-      )
+      setError(t('completeAllFields')) // CHANGED: key now exists, no "||" fallback needed
       return
     }
 
@@ -185,38 +188,39 @@ export function SoilHealth() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          zao: crop, // CHANGED: awali ilikuwa soilType (kosa)
+          zao: crop,
 
           usomaji_wa_sasa: {
             N: Number(soilData.nitrogen),
             P: Number(soilData.phosphorus),
             K: Number(soilData.potassium),
-            temp: Number(soilData.temperature),
+            temperature: Number(soilData.temperature),
             humidity: Number(soilData.humidity),
             ph: Number(soilData.ph),
           },
 
-          aina_ya_udongo: soilType,
+          // CHANGED: look up the backend value from the selected id
+          aina_ya_udongo:
+            SOIL_TYPES.find(s => s.id === soilTypeId)?.value ?? 'tifutifu',
           ph_ya_maji: Number(soilData.waterPh),
-          rainfall: Number(soilData.rainfall),
         }),
       })
 
       const json = await response.json()
 
       if (!response.ok) {
-        throw new Error(json?.message || json?.error || t('diagnosisError')) // CHANGED
+        throw new Error(extractErrorMessage(json, t('diagnosisError')))
       }
 
       const result = extractDiagnosis(json)
 
       if (!result) {
-        throw new Error(t('diagnosisEmpty')) // CHANGED
+        throw new Error(t('diagnosisEmpty'))
       }
 
       setDiagnosis(result)
     } catch (err) {
-      setError(err?.message || t('diagnosisError')) // CHANGED
+      setError(err?.message || t('diagnosisError'))
     } finally {
       setLoading(false)
     }
@@ -252,16 +256,15 @@ export function SoilHealth() {
           <div>
             <div className="neu-inset mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold text-[color:var(--neu-accent-dark)]">
               <BrainCircuit size={14} />
-              {t('soilIntelligence')} {/* CHANGED */}
+              {t('soilIntelligence')}
             </div>
 
             <h1 className="text-2xl font-bold tracking-tight text-[color:var(--neu-text)] sm:text-3xl">
-              {t('soilHealth') || 'Soil Health'}
+              {t('soilHealth')}
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-[color:var(--neu-muted)]">
-              {t('SOIL HEALTHY Desc') ||
-                'Enter your soil and environmental measurements for intelligent field analysis.'}
+              {t('soilHealthDesc')} {/* CHANGED: was t('SOIL HEALTHY Desc') || '...' (fallback never worked) */}
             </p>
           </div>
 
@@ -277,28 +280,22 @@ export function SoilHealth() {
                 htmlFor="crop-select"
                 className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[color:var(--neu-muted)]"
               >
-                {t('crop') || 'Crop'}
+                {t('cropType')} {/* CHANGED: was t('crop') = "Crop Recommendation" */}
               </label>
 
-              {/* 
-                IMPORTANT:
-                All crop options are rendered here.
-                The select is allowed to use the available width
-                so options such as Rice, Maize and Coffee remain accessible.
-              */}
               <select
                 id="crop-select"
-                value={soilType}
-                onChange={e => setSoilType(e.target.value)}
+                value={crop}
+                onChange={e => setCrop(e.target.value)}
                 className="w-full min-w-[180px] bg-transparent text-sm font-bold text-[color:var(--neu-text)] outline-none"
               >
-                {CROP_OPTIONS.map(crop => (
+                {CROP_OPTIONS.map(option => (
                   <option
-                    key={crop.value}
-                    value={crop.value}
+                    key={option.value}
+                    value={option.value}
                     className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white"
                   >
-                    {crop.label}
+                    {option.label}
                   </option>
                 ))}
               </select>
@@ -326,7 +323,7 @@ export function SoilHealth() {
                     htmlFor={`soil-${field.key}`}
                     className="text-xs font-bold text-[color:var(--neu-text)]"
                   >
-                    {field.label}
+                    {t(field.labelKey)}
                   </label>
                 </div>
 
@@ -351,20 +348,21 @@ export function SoilHealth() {
                   </span>
                 </div>
               </div>
-            </SoilCard>
-          ))}
+            )
+          })}
 
-          {/* ADDED: SOIL TYPE kama kadi ya mwisho kwenye gridi */}
+          {/* SOIL TYPE as the last card in the grid */}
           <SoilCard icon={Layers} label={t('soilType')} htmlFor="soil-type">
             <div className="mt-5">
+              {/* CHANGED: select works with unique ids, so every option can be chosen */}
               <select
                 id="soil-type"
-                value={soilType}
-                onChange={(e) => setSoilType(e.target.value)}
+                value={soilTypeId}
+                onChange={(e) => setSoilTypeId(e.target.value)}
                 className="w-full border-b-2 border-white/20 bg-transparent pb-2 text-xl font-bold tracking-tight text-white outline-none transition focus:border-emerald-300"
               >
                 {SOIL_TYPES.map((s) => (
-                  <option key={s.value} value={s.value} className="text-slate-900">
+                  <option key={s.id} value={s.id} className="text-slate-900">
                     {t(s.key)}
                   </option>
                 ))}
@@ -384,12 +382,12 @@ export function SoilHealth() {
             {loading ? (
               <>
                 <Loader2 size={18} className="animate-spin" />
-                {t('diagnosing') || 'Analyzing Soil...'}
+                {t('diagnosing')}
               </>
             ) : (
               <>
                 <BrainCircuit size={18} />
-                {t('runDiagnosis') || 'Run Soil Diagnosis'}
+                {t('runDiagnosis')}
               </>
             )}
           </button>
@@ -408,7 +406,7 @@ export function SoilHealth() {
 
             <div>
               <p className="font-semibold">
-                {t('diagnosisFailed') || 'Diagnosis failed'}
+                {t('diagnosisFailed')}
               </p>
 
               <p className="mt-1 text-sm leading-6">
@@ -430,12 +428,11 @@ export function SoilHealth() {
 
               <div>
                 <h2 className="font-bold text-[color:var(--neu-text)]">
-                  {t('diagnosisResult') || 'AI Soil Assessment'}
+                  {t('diagnosisResult')}
                 </h2>
 
                 <p className="mt-1 text-xs text-[color:var(--neu-muted)]">
-                  {t('diagnosisCompleted') ||
-                    'Your soil measurements have been analyzed.'}
+                  {t('diagnosisCompleted')}
                 </p>
               </div>
 
