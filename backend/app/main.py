@@ -10,7 +10,7 @@ load_dotenv()
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.core.audit import client_ip, log_security
 from app.core.config import settings
@@ -33,6 +33,9 @@ AUTH_PATHS = {
 }
 ML_PATHS = {"/api/chat", "/api/predict", "/api/diagnose", "/api/weather"}
 PUBLIC_PATHS = {"/health", "/api/health", "/api/ml-status"}
+# Swagger UI na ReDoc hupakua JS/CSS kutoka jsDelivr; CSP kali inayofaa API
+# ingezizuia kurasa hizi na kuacha white page.
+DOCS_PATHS = {"/docs", "/redoc", "/docs/oauth2-redirect"}
 
 
 def warn_about_weak_config() -> None:
@@ -120,11 +123,19 @@ def apply_security_headers(response, request: Request) -> None:
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-XSS-Protection"] = "0"
     response.headers["Permissions-Policy"] = "geolocation=(self), camera=(), microphone=(), payment=()"
-    response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; "
-        "object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
-    )
+    if request.url.path in DOCS_PATHS:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https:; font-src 'self' data: https://cdn.jsdelivr.net; "
+            "connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+        )
+    else:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; "
+            "object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+        )
     if request.url.scheme == "https":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
@@ -174,6 +185,12 @@ app.include_router(auth_router.router)
 app.include_router(user_router.router)
 app.include_router(seed_role.router)
 app.include_router(ml_router.router)
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    """Bare backend URL iweke moja kwa moja kwenye Swagger UI."""
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health", tags=["Health"])
