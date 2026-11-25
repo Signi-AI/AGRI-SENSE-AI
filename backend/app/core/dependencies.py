@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.core.security import decode_token
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -27,12 +29,22 @@ def get_current_user(access_token:str=Depends(oauth2_scheme),db:Session=Depends(
     user=db.query(User).filter(User.email==email).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="invalid credentials")
-    
+
+    # A password change, reset or "log out everywhere" bumps the version.
+    if payload.get("ver", 0)!=user.token_version:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="please login again")
+
+    if user.locked_until and user.locked_until>datetime.now():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="please login again")
+
     return user
 
 
 
-def require_role(required_role:str):
+def require_role(required_role):
+    # Accept either a single role name or a list/tuple/set of role names.
+    required_roles = {required_role} if isinstance(required_role, str) else set(required_role)
+
     def role_Check(current_user=Depends(get_current_user),
                    db:Session=Depends(get_db)):
         roles=db.query(Role).join(UserRole,UserRole.role_id==Role.id).filter(UserRole.user_id==current_user.id).all()
@@ -40,7 +52,7 @@ def require_role(required_role:str):
         
         if "admin" in roles_name:
             return current_user
-        if required_role not in roles_name:
+        if not required_roles.intersection(roles_name):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="you not access to perform this action")
         return current_user
     return role_Check

@@ -43,3 +43,7 @@ dist/
 # Operating-system files
 .DS_Store
 Thumbs.db
+
+# Kinga mafaili ya siri na mazingira
+.env
+config.json

@@ -5,25 +5,28 @@ Hii ni endpoints zilizohamishwa kutoka backend/app.py ya awali, sasa
 zikiwa sehemu ya muundo mpya wa app/ package.
 """
 
+import math
 import os
 from pathlib import Path
 from typing import Optional, Dict
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, field_validator
 import joblib
 import requests
 
-from app.services.diagnostic_functions import pakua_jedwali_la_viwango, toa_ripoti_kamili
+from app.core.dependencies import get_current_user
+from app.models.user import User
+from app.ml.diagnostic_functions import pakua_jedwali_la_viwango, toa_ripoti_kamili
 
 router = APIRouter(tags=["ML & Weather & Chat"])
 
 # ---------------------------------------------------------------
-# Njia (path) - backend/ ndiyo mzizi wa faili za ML (model, jedwali)
-# Faili hii iko ndani ya backend/app/api/router/, hivyo tunarudi
-# nyuma "parents[3]" kufikia backend/
+# Njia (path) - artifacts za ML za runtime ziko backend/app/ml/.
+# Faili hii iko backend/app/api/router/, hivyo parents[2] ni backend/app/.
+# Nakala ya chanzo iko ../machine-learning/ (angalia README yake).
 # ---------------------------------------------------------------
-BASE_DIR = Path(__file__).resolve().parents[3]
+BASE_DIR = Path(__file__).resolve().parents[2] / "ml"
 MODEL_PATH = BASE_DIR / "crop_recommendation_model.pkl"
 JSON_PATH = BASE_DIR / "viwango_vya_mazao.json"
 
@@ -95,9 +98,35 @@ class DiagnoseInput(BaseModel):
     ph_ya_maji: Optional[float] = None
     ujazo_wa_lita: Optional[float] = 100
 
+    @field_validator("zao", "aina_ya_udongo")
+    @classmethod
+    def short_text(cls, v: str) -> str:
+        v = v.strip()
+        if not v or len(v) > 100:
+            raise ValueError("Text must be between 1 and 100 characters")
+        return v
+
+    @field_validator("usomaji_wa_sasa")
+    @classmethod
+    def limit_readings(cls, v: Dict[str, float]) -> Dict[str, float]:
+        if len(v) > 20:
+            raise ValueError("Too many readings (maximum 20)")
+        for key, value in v.items():
+            if len(key) > 50 or not math.isfinite(value) or abs(value) > 1_000_000:
+                raise ValueError("Invalid reading value")
+        return v
+
 
 class UjumbeWaChat(BaseModel):
     ujumbe: str
+
+    @field_validator("ujumbe")
+    @classmethod
+    def limit_message(cls, v: str) -> str:
+        v = v.strip()
+        if not v or len(v) > 2000:
+            raise ValueError("Message must be between 1 and 2000 characters")
+        return v
 
 
 def hakiki_data_ya_model_a(data: ModelAInput):
@@ -141,7 +170,7 @@ def health():
 
 
 @router.get("/api/weather")
-def weather(lat: float, lon: float):
+def weather(lat: float, lon: float, _user: User = Depends(get_current_user)):
     if not OPENWEATHER_API_KEY:
         raise HTTPException(status_code=500, detail="OPENWEATHER_API_KEY haijawekwa upande wa server.")
     try:
@@ -164,7 +193,7 @@ def weather(lat: float, lon: float):
 
 
 @router.post("/api/predict")
-def predict(payload: ModelAInput):
+def predict(payload: ModelAInput, _user: User = Depends(get_current_user)):
     if model is None:
         raise HTTPException(status_code=500, detail="Model A haijapakuliwa upande wa server.")
 
@@ -189,7 +218,7 @@ def predict(payload: ModelAInput):
 
 
 @router.post("/api/diagnose")
-def diagnose(payload: DiagnoseInput):
+def diagnose(payload: DiagnoseInput, _user: User = Depends(get_current_user)):
     if jedwali_la_viwango is None:
         raise HTTPException(status_code=500, detail="Jedwali la Model B halijapakuliwa.")
 
@@ -204,7 +233,7 @@ def diagnose(payload: DiagnoseInput):
 
 
 @router.post("/api/chat")
-def chat(payload: UjumbeWaChat):
+def chat(payload: UjumbeWaChat, _user: User = Depends(get_current_user)):
     if not GROQ_API_KEY:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY haijawekwa upande wa server.")
     if not payload.ujumbe or not payload.ujumbe.strip():

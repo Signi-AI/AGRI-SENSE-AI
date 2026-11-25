@@ -173,25 +173,33 @@ pip install scikit-learn joblib fastapi uvicorn
 
 ---
 
-## 6. Muundo wa Folder (ML Component)
+## 6. Muundo wa Folder (mpangilio wa folders tatu)
 
 ```
-mfumo-wa-kilimo-ml/
-├── data/
-│   ├── crop_recommendation.csv
-│   └── viwango_vya_mazao.csv
-├── models/
-│   └── crop_recommendation_model.pkl
-├── notebooks/
-│   └── chunguza_data.ipynb
-├── src/
-│   ├── data_generation.py
-│   ├── train_model.py
-│   ├── predict.py
-│   └── diagnostic_functions.py
-├── requirements.txt
-└── README.md
+AGRI-SENSE-AI/
+├── backend/                 # FastAPI, auth, na API endpoints
+│   ├── app/
+│   │   ├── api/router/      # auth, user, roles, ml_router
+│   │   ├── core/            # config, security, database, dependencies
+│   │   ├── ml/              # nakala ya runtime ya ML (inayotumika na API)
+│   │   ├── models/, schemas/, services/
+│   │   └── main.py
+│   ├── migrations/, alembic.ini, requirements.txt, procfile
+│   └── .env.example
+├── frontend/                # React + Vite (UI yote)
+│   ├── src/, public/, index.html
+│   ├── package.json, vite.config.js, tailwind.config.js, postcss.config.js
+│   ├── .env.example, README.md
+│   └── Vercel Root Directory = frontend/
+└── machine-learning/        # chanzo cha ML na mafunzo
+    ├── data/, models/, notebooks/, src/, archive/, scripts/
+    ├── viwango_vya_mazao.json, requirements.txt, README.md
+    └── scripts/sync_to_backend.sh   # baada ya kutrain, sasisha backend/app/ml/
 ```
+
+> `backend/app/ml/` ni nakala ya runtime; `machine-learning/` ni chanzo halali.
+> Baada ya kurekebisha ML, endesha `machine-learning/scripts/sync_to_backend.sh`.
+> Usichanganye na nakala za zamani zilizo kwenye `machine-learning/archive/`.
 
 ---
 
