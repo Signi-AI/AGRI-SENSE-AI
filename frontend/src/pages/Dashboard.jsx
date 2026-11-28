@@ -44,12 +44,15 @@ const STORE_KEY = 'agrisense-metrics'
 
 export function Dashboard() {
   const { t } = useLanguage()
-  const { user } = useAuth() // CHANGED: jina kutoka backend kwanza
+  const { user, isAdmin } = useAuth() // CHANGED: jina kutoka backend kwanza
 
   // CHANGED: backend kwanza, kisha localStorage (watumiaji wa Google).
   // getCurrentUser() ina try/catch, kwa hiyo data mbovu haiangushi ukurasa.
  const displayName = getCurrentUser()?.name || user?.name || ''
-  const userName = displayName.trim().split(' ')[0] || 'Farmer'
+  const userName = displayName.trim().split(' ')[0] || ''
+  const greeting = isAdmin
+    ? `${t('welcome')}, ${t('admin')}${userName ? ` ${userName}` : ''}`
+    : `${t('welcome')}, ${t('farmer')}`
 
   const [metrics, setMetrics] = useState(DEFAULT_METRICS)
   const [editing, setEditing] = useState(false)
@@ -84,7 +87,7 @@ export function Dashboard() {
             {t('overview')}
           </p>
           <h1 className="text-3xl font-extrabold text-[color:var(--neu-text)] sm:text-4xl">
-            {t('welcome')}, {userName}
+            {greeting}
           </h1>
           <p className="mt-2 text-sm text-[color:var(--neu-muted)]">
             {t('today')}

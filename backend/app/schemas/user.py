@@ -58,6 +58,8 @@ class UserResponse(BaseModel):
     email:EmailStr
     created_at:datetime
     updated_at:datetime
+    role:str="farmer"
+    roles:List[str]=[]
 
 
 class PaginationResponse(BaseModel):

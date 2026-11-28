@@ -42,8 +42,16 @@ def _verification_required() -> bool:
     return bool(settings.REQUIRE_EMAIL_VERIFICATION and settings.SMTP_HOST)
 
 
-def _assign_farmer_role(db: Session, user: User) -> None:
-    role = db.query(Role).filter(Role.name == "farmer").first()
+def _assign_default_role(db: Session, user: User) -> None:
+    # Emails listed in ADMIN_EMAILS become admins on signup; everyone else is a
+    # farmer. The same list is used at startup to keep/promote those accounts.
+    admin_emails = {
+        item.strip().lower()
+        for item in settings.ADMIN_EMAILS.split(",")
+        if item.strip()
+    }
+    role_name = "admin" if user.email.strip().lower() in admin_emails else "farmer"
+    role = db.query(Role).filter(Role.name == role_name).first()
     if not role:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -82,7 +90,7 @@ class AuthServise():
         db.add(user)
         db.commit()
         db.refresh(user)
-        _assign_farmer_role(db, user)
+        _assign_default_role(db, user)
 
         if _verification_required():
             token = create_purpose_token(email, "verify", settings.VERIFY_TOKEN_EXPIRE, user.token_version)
@@ -196,7 +204,7 @@ class AuthServise():
             db.add(user)
             db.commit()
             db.refresh(user)
-            _assign_farmer_role(db, user)
+            _assign_default_role(db, user)
             log_security("firebase_user_created", ip=ip, email=email, user_id=user.id)
 
         if user.locked_until and user.locked_until > datetime.now():

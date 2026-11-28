@@ -100,6 +100,27 @@ const translations = {
     admin: 'Admin',
     agronomist: 'Agronomist',
 
+    // ADMIN DASHBOARD
+    adminDashboard: 'Admin Dashboard',
+    adminDesc: 'Manage the farmers registered in your system.',
+    farmers: 'Farmers',
+    totalFarmers: 'Total farmers',
+    searchFarmers: 'Search by name',
+    addFarmer: 'Add farmer',
+    addFarmerDesc: 'Create a new farmer account.',
+    adding: 'Adding...',
+    deleting: 'Removing...',
+    confirmDelete: 'Remove {name} from the system?',
+    noFarmers: 'No farmers found.',
+    createdAt: 'Registered',
+    action: 'Action',
+    farmerAdded: 'Farmer account created.',
+    farmerRemoved: 'Farmer removed.',
+    loadFailed: 'Could not load farmers.',
+    addFailed: 'Could not add farmer.',
+    deleteFailed: 'Could not remove farmer.',
+    passwordHint: 'At least 8 characters, including a letter and a number.',
+
     // =====================================================
     // DASHBOARD
     // =====================================================
@@ -822,6 +843,27 @@ const translations = {
 
     agronomist:
       'Mtaalamu wa Kilimo',
+
+    // DASHBORDI YA ADMIN
+    adminDashboard: 'Dashbordi ya Admin',
+    adminDesc: 'Simamia wakulima waliosajiliwa kwenye mfumo wako.',
+    farmers: 'Wakulima',
+    totalFarmers: 'Jumla ya wakulima',
+    searchFarmers: 'Tafuta kwa jina',
+    addFarmer: 'Ongeza mkulima',
+    addFarmerDesc: 'Fungua akaunti mpya ya mkulima.',
+    adding: 'Inaongeza...',
+    deleting: 'Inaondoa...',
+    confirmDelete: 'Utaondoa {name} kwenye mfumo?',
+    noFarmers: 'Hakuna wakulima waliopatikana.',
+    createdAt: 'Ilisajiliwa',
+    action: 'Kitendo',
+    farmerAdded: 'Akaunti ya mkulima imefunguliwa.',
+    farmerRemoved: 'Mkulima ameondolewa.',
+    loadFailed: 'Imeshindwa kupakua wakulima.',
+    addFailed: 'Imeshindwa kumongeza mkulima.',
+    deleteFailed: 'Imeshindwa kumwondoa mkulima.',
+    passwordHint: 'Angalau herufi 8, ikijumuisha herufi na namba.',
 
     // =====================================================
     // DASHBOARD

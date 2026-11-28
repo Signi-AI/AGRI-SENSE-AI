@@ -17,7 +17,8 @@ import {
   UserRound,
   LockKeyhole,
   BriefcaseBusiness,
-  Settings
+  Settings,
+  ShieldCheck
 } from 'lucide-react'
 import { useLanguage } from '../i18n'
 import { useAuth } from '../context/AuthContext'
@@ -186,7 +187,11 @@ const sideLinks = [
 export function Sidebar({ mobileOpen = false, onClose }) {
   const navigate = useNavigate()
   const { t } = useLanguage()
-  const { logout } = useAuth()
+  const { logout, isAdmin } = useAuth()
+
+  const links = isAdmin
+    ? [...sideLinks, ['admin', 'adminDashboard', ShieldCheck]]
+    : sideLinks
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -206,7 +211,7 @@ export function Sidebar({ mobileOpen = false, onClose }) {
 
   const navigation = (
     <nav className="space-y-1.5">
-      {sideLinks.map(([id, key, Icon]) => (
+      {links.map(([id, key, Icon]) => (
         <NavLink
           key={id}
           to={'/' + id}

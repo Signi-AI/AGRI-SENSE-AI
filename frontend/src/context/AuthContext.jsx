@@ -270,6 +270,7 @@ export function AuthProvider({ children }) {
     token,
     loading: backendLoading || googleLoading,
     isAuthenticated: !!user,
+    isAdmin: user?.role === 'admin' || (Array.isArray(user?.roles) && user.roles.includes('admin')),
     register,
     login,
     loginWithGoogle,

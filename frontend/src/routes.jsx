@@ -18,6 +18,7 @@ import { Settings } from './pages/Settings'
 import { Contact } from './pages/Contact'
 import { Workspace } from './pages/Workspace'
 import { PrivacySecurity } from './pages/PrivacySecurity'
+import { Admin } from './pages/Admin'
 
 function PublicLayout({ theme, setTheme }) {
   return (
@@ -85,6 +86,23 @@ function RedirectIfAuthed() {
 
   if (loading) return null
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
+
+  return <Outlet />
+}
+
+// Admin page is hidden from regular farmers both in the menu and here.
+function RequireAdmin() {
+  const { isAdmin, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-cream dark:bg-[#0b1710]">
+        <p className="text-sm font-bold text-slate-400">Loading…</p>
+      </div>
+    )
+  }
+
+  if (!isAdmin) return <Navigate to="/dashboard" replace />
 
   return <Outlet />
 }
@@ -170,6 +188,10 @@ export function AppRoutes({ theme, setTheme }) {
             }
           />
           <Route path="/privacy-security" element={<PrivacySecurity />} />
+
+          <Route element={<RequireAdmin />}>
+            <Route path="/admin" element={<Admin />} />
+          </Route>
         </Route>
       </Route>
 

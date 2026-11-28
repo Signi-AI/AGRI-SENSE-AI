@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 from app.core.audit import log_security
 from app.core.security import Hash
 from app.models.revoke import Revoke
+from app.models.role import Role
 from app.models.user import User
+from app.models.userRole import UserRole
 from app.schemas.user import ChangePassword, UserUpdate
 
 
@@ -19,11 +21,42 @@ def _can_access(current_user, user_id: int) -> bool:
     return _is_admin(current_user) or current_user.id == user_id
 
 
+def _roles_of(db: Session, user_id: int):
+    return [
+        role.name for role in db.query(Role)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .filter(UserRole.user_id == user_id)
+        .all()
+    ]
+
+
+def _primary_role(roles) -> str:
+    if "admin" in roles:
+        return "admin"
+    if "agromist" in roles:
+        return "agromist"
+    return "farmer"
+
+
+def _serialize_user(db: Session, user):
+    roles = _roles_of(db, user.id)
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "created_at": user.created_at,
+        "updated_at": user.updated_at,
+        "role": _primary_role(roles),
+        "roles": roles,
+    }
+
+
 class UserService:
 
     @staticmethod
     def myinfo(db: Session, current_user):
-        return db.query(User).filter(User.id == current_user.id).first()
+        user = db.query(User).filter(User.id == current_user.id).first()
+        return _serialize_user(db, user)
 
     @staticmethod
     def alluser(db: Session, page: int = 1, limit: int = 10,
@@ -45,7 +78,7 @@ class UserService:
             "limit": limit,
             "total_user": total,
             "total_pages": math.ceil(total / limit),
-            "users": users,
+            "users": [_serialize_user(db, user) for user in users],
         }
 
     @staticmethod
@@ -56,7 +89,7 @@ class UserService:
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
-        return user
+        return _serialize_user(db, user)
 
     @staticmethod
     def userupdate(db: Session, data: UserUpdate, user_id: int, current_user):
@@ -79,7 +112,7 @@ class UserService:
         db.commit()
         db.refresh(user)
         log_security("user_updated", ip="", user_id=current_user.id, target=user_id)
-        return user
+        return _serialize_user(db, user)
 
     @staticmethod
     def deleteuser(user_id: int, db: Session, current_user):
